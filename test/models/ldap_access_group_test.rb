@@ -25,7 +25,7 @@ class LdapAccessGroupTest < ActiveSupport::TestCase
   end
 
   test 'name should be unique' do
-    assert_uniqueness @item, :name
+    assert_uniqueness @item, :name, :group => access_groups(:three)
   end
 
 end

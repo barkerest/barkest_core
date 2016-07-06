@@ -10,7 +10,12 @@ module BarkestCore
   # when desirable.
   class DbTable < ActiveRecord::Base
     self.abstract_class = true
-    establish_connection BarkestCore.db_config
+
+    # Ensure that we only establish a new connection if needed.
+    unless BarkestCore.db_config.symbolize_keys == ActiveRecord::Base.connection_config.symbolize_keys
+      establish_connection BarkestCore.db_config
+    end
+
   end
 
 end

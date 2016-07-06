@@ -24,8 +24,12 @@ module BarkestCore
 
     ##
     # Creates a new GlobalStatus object.
-    def initialize
+    #
+    # If you specify a status file, then that file will be used for the locking and status reporting.
+    # Otherwise, the "global_lock" file will be used.
+    def initialize(status_file = nil)
       @handle = nil
+      @status_file_path = status_file
     end
 
     ##

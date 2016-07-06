@@ -1,5 +1,6 @@
 require 'jquery-rails'
 require 'bootstrap-sass'
+require 'prawn-rails'
 
 module BarkestCore
   class Engine < ::Rails::Engine

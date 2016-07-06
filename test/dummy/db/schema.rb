@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(version: 20160701005706) do
     t.datetime "updated_at",             null: false
   end
 
-  add_index "ldap_access_groups", ["name"], name: "unique_ldap_access_groups", unique: true
+  add_index "ldap_access_groups", ["group_id", "name"], name: "unique_ldap_access_groups", unique: true
 
   create_table "user_login_histories", force: :cascade do |t|
     t.integer  "user_id",                null: false

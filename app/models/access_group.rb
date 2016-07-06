@@ -3,14 +3,14 @@ class AccessGroup < ::BarkestCore::DbTable
   include BarkestCore::NamedModel
 
   # hide the Groups<=>Users relationship association
-  has_many :access_group_user_members, class_name: 'AccessGroupUserMember', foreign_key: 'group_id'
+  has_many :access_group_user_members, class_name: 'AccessGroupUserMember', foreign_key: 'group_id', dependent: :delete_all
   private :access_group_user_members, :access_group_user_members=
 
   # and expose the Users relationship instead.
   has_many :users, class_name: 'User', through: :access_group_user_members, source: :member
 
   # hide the Groups<=>Groups relationship association
-  has_many :access_group_group_members, class_name: 'AccessGroupGroupMember', foreign_key: 'group_id'
+  has_many :access_group_group_members, class_name: 'AccessGroupGroupMember', foreign_key: 'group_id', dependent: :delete_all
   private :access_group_group_members, :access_group_group_members=
 
   # and expose the group members.
@@ -23,7 +23,7 @@ class AccessGroup < ::BarkestCore::DbTable
     @memberships ||= AccessGroupGroupMember.where(member_id: id).includes(:group).map{|v| v.group}.to_a.freeze
   end
 
-  has_many :ldap_groups, class_name: 'LdapAccessGroup', foreign_key: 'group_id'
+  has_many :ldap_groups, class_name: 'LdapAccessGroup', foreign_key: 'group_id', dependent: :delete_all
 
   validates :name,
             presence: true,
@@ -34,19 +34,47 @@ class AccessGroup < ::BarkestCore::DbTable
 
   ##
   # Gets the LDAP group list as a newline separated string.
-  def ldap_group_list
-    ldap_groups.map{|v| v.name}.join("\n")
+  #
+  # Specify +refresh+ to force the list to be reloaded.
+  #
+  # Specify a +separator+ if your would like to use something other than a newline.
+  def ldap_group_list(refresh = false, separator = "\n")
+    @ldap_group_list = nil if refresh
+    @ldap_group_list ||= ldap_groups(refresh).map{|v| v.name.upcase}.join(separator)
   end
 
   ##
   # Splits a newline separated string into LDAP groups for this group.
+  #
+  # +value+ can be either a newline separated string or an array of strings.
   def ldap_group_list=(value)
-    new_list = []
-    value.split("\n").each do |ldap_group|
-      new_val = LdapAccessGroup.find_or_create_by(group: self, name: ldap_group.upcase)
-      new_list << new_val unless new_list.include?(new_val)
+    # convert string into array.
+    value = value.split("\n") if value.is_a?(String)
+
+    @ldap_group_list = nil
+
+    if value.is_a?(Array) && value.count > 0
+
+      value = value.map{|v| v.to_s.upcase}.uniq
+
+      # remove those missing from the new list.
+      ldap_groups.where.not(name: value).delete_all
+
+      # remove items already existing in the current list.
+      value.delete_if {|v| ldap_groups.where(name: v).count != 0 }
+
+      # add items missing from the current list.
+      value.each do |new_group|
+        ldap_groups << LdapAccessGroup.new(group: self, name: new_group)
+      end
+
+    else
+
+      # clear the list.
+      ldap_groups.delete_all
     end
-    ldap_groups = new_list
+
+    ldap_groups true
   end
 
   ##

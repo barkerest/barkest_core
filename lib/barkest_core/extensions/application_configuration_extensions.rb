@@ -22,6 +22,9 @@ Rails::Application::Configuration.class_eval do
           'timeout' => 5000
       }
 
+      Rails.logger.warn "Providing default database configuration for #{Rails.env} environment."
+      puts "\nWARNING: Default database connection in use.\n" if Rails.env.test?
+
       # only provide defaults for development and test.
       {
           'test' => default.merge(database: 'db/test.sqlite3'),

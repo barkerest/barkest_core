@@ -55,4 +55,60 @@ class AccessGroupTest < ActiveSupport::TestCase
     assert_not @group.belongs_to?(@group1)
   end
 
+  test 'should allow ldap group assignment' do
+
+    # group must be saved first.
+    @group.save!
+    @group.reload
+
+    assert @group.valid?
+
+    assert @group.ldap_group_list.blank?
+
+    other_ldap_count = LdapAccessGroup.count
+
+    list1 = [ 'GROUP A', 'GROUP B', 'GROUP C', 'GROUP D' ]
+    list2 = [ 'GROUP E', 'GROUP F', 'GROUP G' ]
+
+    [list1, list2].each do |list|
+
+      assert @group.valid?
+
+      # Assign to the list.
+      @group.ldap_group_list = list.join("\n")
+      assert @group.save
+
+      # the list should no longer be blank.
+      assert_not @group.ldap_group_list.blank?
+
+      # and the ldap_groups count should match the list count.
+      assert_equal list.length, @group.ldap_groups.count
+      assert_equal other_ldap_count + list.count, LdapAccessGroup.count
+
+      # first pass to ensure all the groups we provided exist.
+      list.each do |name|
+        assert_equal 1, @group.ldap_groups.where(name: name).count, "Missing '#{name}' LDAP group."
+      end
+
+      # second pass to ensure all the groups in the list were provided by us.
+      @group.ldap_groups.each do |group|
+        assert list.include?(group.name), "Extra '#{group.name}' LDAP group."
+      end
+
+    end
+
+    # reset the list.
+    @group.ldap_group_list = nil
+    assert @group.ldap_group_list.blank?
+
+    # assignment of arrays should also work.
+    @group.ldap_group_list = []
+    assert @group.ldap_group_list.blank?
+
+    @group.ldap_group_list = list1
+    assert_not @group.ldap_group_list.blank?
+    assert_equal list1.length, @group.ldap_groups.count
+
+  end
+
 end

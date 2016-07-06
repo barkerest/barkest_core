@@ -6,6 +6,6 @@ class CreateLdapAccessGroups < ActiveRecord::Migration
 
       t.timestamps null: false
     end
-    add_index :ldap_access_groups, :name, unique: true, name: :unique_ldap_access_groups
+    add_index :ldap_access_groups, [:group_id, :name], unique: true, name: :unique_ldap_access_groups
   end
 end

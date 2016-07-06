@@ -4,13 +4,11 @@ module BarkestCore
   # The application's ApplicationController should inherit from this.
   class ApplicationControllerBase < ActionController::Base
 
-    protect_from_forgery with: :exception
-
     include BarkestCore::SessionsHelper
     include BarkestCore::RecaptchaHelper
 
+    protect_from_forgery with: :exception
     layout 'layouts/application'
-
     helper BarkestCore::Engine.helpers
 
     ##
