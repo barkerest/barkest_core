@@ -1,0 +1,13 @@
+<%= form_for(@user) do |f| %>
+  <%= text_form_group f, :name, field_maxlength: '100' %>
+
+  <%= text_form_group f, :email, field_type: 'email' %>
+
+  <%= text_form_group f, :password, field_type: 'password' %>
+
+  <%= text_form_group f, :password_confirmation, field_type: 'password' %>
+
+  <%= @user.new_record? ? add_recaptcha_challenge : '' %>
+
+  <%= f.submit current_user?(@user) ? (@user.new_record? ? 'Create my account' : 'Update my account') : 'Update account', class: 'btn btn-primary' %>
+<% end %>

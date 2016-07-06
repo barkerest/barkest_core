@@ -1,0 +1,45 @@
+<div class="container">
+  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <%= link_to image_tag('barkest_core/barcode-B.svg', title: 'BarkerEST', alt: 'BarkerEST'), root_path, id: 'logo' %>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li><%= link_to 'Home', root_path %></li>
+
+          <%# TODO: Add menu entries here for anonymous users. %>
+
+          <% if logged_in? %>
+
+              <%# TODO: Add menu entries here for authenticated users. %>
+
+              <% if system_admin? || BarkestCore.lock_down_users == false %>
+                  <li><%= link_to 'Users', users_path %></li>
+              <% end %>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><%= current_user.name %> <i class="caret"></i></a>
+                <ul class="dropdown-menu">
+                  <li><%= link_to 'Profile', current_user %></li>
+                  <li><%= link_to 'Settings', edit_user_path(current_user) %></li>
+                  <% if system_admin? %>
+                      <li class="divider"></li>
+                      <li><%= link_to 'Access Groups', access_groups_path %></li>
+                  <% end %>
+                  <li class="divider"></li>
+                  <li><%= link_to 'Log out', logout_path, method: :delete %></li>
+                </ul>
+              </li>
+          <% else %>
+              <li><%= link_to 'Log in', login_path %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<% if model && model.respond_to?('errors') && model.errors && model.errors.any? %>
+  <div id="error_explanation">
+   <div class="alert alert-danger">
+    <strong>The form contains <%= pluralize(model.errors.count, 'error') %>.</strong>
+    <% if model.errors.count > 6 %>
+      <div id="error_top_<%= model.object_id %>" style="display: block;">
+       <% model.errors.full_messages[0..2].each do |msg| %>
+         <li><%= msg %></li>
+       <% end %>
+       <li><a href="javascript:show_all_<%= model.object_id %>()" title="Show all errors">... plus <%= model.errors.count - 3 %> more</a></li>
+      </div>
+      <div id="error_all_<%= model.object_id %>" style="display: none;">
+       <% model.errors.full_messages.each do |msg| %>
+         <li><%= msg %></li>
+       <% end %>
+      </div>
+      <script type="text/javascript">
+       function show_all_<%= model.object_id %>() { $('#error_top_<%= model.object_id %>').hide(); $('#error_all_<%= model.object_id %>').show(); }
+      </script>
+    <% else %>
+      <ul>
+       <% model.errors.full_messages.each do |msg| %>
+         <li><%= msg %></li>
+       <% end %>
+      </ul>
+    <% end %>
+   </div>
+  </div>
+<% end %>

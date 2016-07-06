@@ -1,0 +1,56 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+admin:
+  name: Mike Smith
+  email: msmith@example.com
+  system_admin: true
+  password_digest: <%= User.digest('password') %>
+  activated: true
+  activated_at: <%= Time.zone.now %>
+
+standard:
+  name: John Doe
+  email: jdoe@example.com
+  password_digest: <%= User.digest('password') %>
+  activated: true
+  activated_at: <%= Time.zone.now %>
+  groups: one, two
+
+basic:
+  name: Jane Smith
+  email: jsmith@example.com
+  password_digest: <%= User.digest('password') %>
+  activated: true
+  activated_at: <%= Time.zone.now %>
+
+disabled:
+  name: Tim Thompson
+  email: tt@example.com
+  enabled: false
+  activated: true
+  activated_at: <%= Time.zone.now %>
+  disabled_at: <%= Time.zone.now - 4.weeks %>
+  password_digest: <%= User.digest('password') %>
+
+recently_disabled:
+  name: Fred Flintstone
+  email: fred@example.com
+  enabled: false
+  disabled_at: <%= Time.zone.now - 2.days %>
+  password_digest: <%= User.digest('password') %>
+
+ldap:
+  name: Miss Piggy
+  email: piggy@example.com
+  password_digest: <%= User.digest(User.new_token) %>
+  ldap: true
+  activated: true
+  activated_at: <%= Time.zone.now %>
+
+<% 30.times do |n| %>
+user_<%= n + 3 %>:
+  name: <%= "User #{n}" %>
+  email: <%= "user-#{n}@example.com" %>
+  password_digest: <%= User.digest('password') %>
+  activated: true
+  activated_at: <%= Time.zone.now %>
+<% end %>

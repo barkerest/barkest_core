@@ -1,0 +1,20 @@
+<% provide(:title, 'Reset password') %>
+<h1>Reset password</h1>
+
+<%= error_summary(@user) %>
+
+<div class="row">
+ <div class="col-md-4 col-md-offset-4">
+  <%= form_for(@user, url: password_reset_path(params[:id])) do |f| %>
+    <%= hidden_field_tag :email, @user.email %>
+
+    <%= text_form_group f, :password, field_type: 'password' %>
+
+    <%= text_form_group f, :password_confirmation, field_type: 'password' %>
+
+    <%= add_recaptcha_challenge %>
+
+    <%= f.submit 'Update password', class: 'btn btn-primary' %>
+  <% end %>
+ </div>
+</div>
