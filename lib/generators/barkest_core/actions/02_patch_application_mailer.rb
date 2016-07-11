@@ -1,4 +1,7 @@
 BarkestCore::InstallGenerator.class_eval do
+
+  MissingApplicationMailer = Class.new(::Thor::Error)
+
   ##
   # Patches the ApplicationMailer class to inherit from BarkestCore::ApplicationMailer.
   def patch_application_mailer
@@ -30,10 +33,10 @@ BarkestCore::InstallGenerator.class_eval do
             File.write app_file, lines.join("\n")
           end
         else
-          say "> '#{app_file}' is unchanged.", :bright_green
+          tell "> '#{app_file}' is unchanged.", :bright_green
         end
       else
-        say "> '#{app_file}' is good.", :bright_green
+        tell "> '#{app_file}' is good.", :bright_green
       end
 
     else

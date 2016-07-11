@@ -52,10 +52,10 @@ BarkestCore::InstallGenerator.class_eval do
             File.write path, lines.join("\n")
           end
         else
-          say "> '#{path}' is unchanged.", :bright_green
+          tell "> '#{path}' is unchanged.", :bright_green
         end
       else
-        say "> '#{path}' is good.", :bright_green
+        tell "> '#{path}' is good.", :bright_green
       end
     end
   end

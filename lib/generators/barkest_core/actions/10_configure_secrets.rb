@@ -19,7 +19,7 @@ BarkestCore::InstallGenerator.class_eval do
 
   def ask_for_secret_key_base(question, default = '')
     puts "Current secret key base: #{default[0...20]}..." unless options.quiet?
-    say 'Changing the secret key base will invalidate encrypted values.', :yellow
+    tell 'Changing the secret key base will invalidate encrypted values.', :yellow
     return default unless ask_for_bool('Do you want to change the secret key base to a new random value?', false)
     SecureRandom.urlsafe_base64(72)
   end

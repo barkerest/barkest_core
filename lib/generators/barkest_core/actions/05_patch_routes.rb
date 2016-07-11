@@ -15,7 +15,7 @@ end
           DEFRTS
         end
       else
-        say '> missing \'routes.rb\'.', :yellow
+        tell '> missing \'routes.rb\'.', :yellow
         return
       end
 
@@ -86,7 +86,7 @@ end
         File.write route_file, lines.join("\n")
       end
     else
-      say '> \'routes.rb\' is good.', :bright_green
+      tell '> \'routes.rb\' is good.', :bright_green
     end
 
   end

@@ -2,9 +2,9 @@ BarkestCore::InstallGenerator.class_eval do
   ##
   # Runs the rake task to install the BarkestCore migrations.
   def copy_migrations
-    say '=' * 79
+    tell '=' * 79
     if ask_for_bool('Would you like to install the BarkestCore database migrations?', true)
-      say 'Copying database migrations...' unless options.quiet?
+      tell 'Copying database migrations...' unless options.quiet?
 
       ts = Time.now.strftime('%Y%m%d%H%M%S').to_i
       ext = '.barkest_core.rb'
@@ -31,7 +31,7 @@ BarkestCore::InstallGenerator.class_eval do
         if target_file
           cur_contents = File.read(target_file)
           if cur_contents.strip == contents.strip
-            say "> '#{target_file}' is good.", :bright_green
+            tell "> '#{target_file}' is good.", :bright_green
           else
             perform "> updating '#{target_file}'..." do
               File.write target_file, contents

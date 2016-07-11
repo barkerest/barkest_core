@@ -40,7 +40,7 @@ BarkestCore::InstallGenerator.class_eval do
           File.write file, lines.join("\n")
         end
       else
-        say '> \'.gitignore\' is good.', :bright_green
+        tell '> \'.gitignore\' is good.', :bright_green
       end
 
     else

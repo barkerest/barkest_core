@@ -11,14 +11,14 @@ BarkestCore::InstallGenerator.class_eval do
       if File.exist?(file)
         regex = /<%=\s+render[\s\(]+['"]#{layout}['"][\)\s]*%>/
         if regex.match(File.read(file))
-          say "> '#{file}' is good.", :bright_green
+          tell "> '#{file}' is good.", :bright_green
         else
           if ask_for_bool("Your '#{file}' layout does not reference the BarkestCore layout.\nWould you like to change it to use the BarkestCore layout?", true)
             perform "> updating '#{file}'..." do
               File.write file, "<%= render '#{layout}' %>\n"
             end
           else
-            say "> '#{file}' is unchanged.", :bright_green
+            tell "> '#{file}' is unchanged.", :bright_green
           end
         end
       else
@@ -27,7 +27,7 @@ BarkestCore::InstallGenerator.class_eval do
             File.write file, "<%= render '#{layout}' %>\n"
           end
         else
-          say "> '#{file}' is missing.", :yellow
+          tell "> '#{file}' is missing.", :yellow
         end
       end
 

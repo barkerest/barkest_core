@@ -10,7 +10,7 @@ BarkestCore::InstallGenerator.class_eval do
           Dir.mkdir 'db/seeds'
         end
       else
-        say "> 'db/seeds' directory is missing.", :yellow
+        tell "> 'db/seeds' directory is missing.", :yellow
         return
       end
     end
@@ -34,7 +34,7 @@ BarkestCore::InstallGenerator.class_eval do
             File.rename dest, 'db/seeds/' + File.basename(dest)
           end
         else
-          say "> 'db/seeds.rb' is not being moved.", :yellow
+          tell "> 'db/seeds.rb' is not being moved.", :yellow
         end
       end
     end
@@ -44,14 +44,14 @@ BarkestCore::InstallGenerator.class_eval do
       contents = File.read(source)
 
       if File.exist?(dest) && File.read(dest).strip == contents.strip
-        say "> '#{dest}' is good.", :bright_green
+        tell "> '#{dest}' is good.", :bright_green
       else
         if !File.exist?(dest) || ask_for_bool("Would you like to update '#{dest}'?", true) == false
           perform "> #{File.exist?(dest) ? 'creating' : 'updating'} \'#{dest}\'..." do
             File.write dest, contents
           end
         else
-          say "> '#{dest}' is unchanged.", :bright_green
+          tell "> '#{dest}' is unchanged.", :bright_green
         end
       end
     end
