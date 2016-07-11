@@ -37,19 +37,20 @@ module BarkestCore
   #         ...
   #
   # Returned hash will have symbol keys.
-  def self.db_config
-    @db_config ||=
-        begin
-          avail = ActiveRecord::Base.configurations.to_h.symbolize_keys
-          section = (avail[:barkest_core] || {}).symbolize_keys
-          env = Rails.env.to_sym
-          cfg = if section.include?(env)
-                  section[env]
-                else
-                  avail[:"barkest_core_#{env}"] || avail[env]
-                end
-          (cfg || {}).symbolize_keys
-        end
+  def self.db_config(other = nil)
+    if other
+      avail = ActiveRecord::Base.configurations.to_h.symbolize_keys
+      section = (avail[other] || {}).symbolize_keys
+      env = Rails.env.to_sym
+      cfg = if section.include?(env)
+              section[env]
+            else
+              avail[:"#{other}_#{env}"] || avail[env] || ActiveRecord::Base.connection_config
+            end
+      (cfg || {}).symbolize_keys
+    else
+      @db_config ||= db_config(:barkest_core)
+    end
   end
 
   ##

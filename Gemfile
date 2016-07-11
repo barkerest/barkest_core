@@ -16,4 +16,6 @@ gem 'byebug', group: [:development, :test]
 group :test do
   gem 'minitest-reporters'
   gem 'mini_backtrace'
+  gem 'tiny_tds',                       '~> 1.0.4'
+  gem 'activerecord-sqlserver-adapter', '~> 4.2.5'
 end

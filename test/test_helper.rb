@@ -28,9 +28,11 @@ Dir.glob(File.expand_path('../../app/models/**/*.rb', __FILE__)).each do |file|
   # load the model definition
   require file
 
+  # determine the model and module names from the path.
   model_name = File.basename(file)[0...-3].camelcase
   module_name = File.basename(File.dirname(file)).camelcase
 
+  # find the model's class.
   model_class = if self.class.const_defined?(model_name)
                   self.class.const_get(model_name)
                 elsif self.class.const_defined?(module_name)
@@ -44,13 +46,16 @@ Dir.glob(File.expand_path('../../app/models/**/*.rb', __FILE__)).each do |file|
                   nil
                 end
 
+  # don't test BarkestCore::DbTable itself.
   if model_class && model_class != BarkestCore::DbTable
-    if model_class < ActiveRecord::Base
-      unless model_class < BarkestCore::DbTable
+
+    if model_class < ActiveRecord::Base           # if it subclasses ActiveRecord::Base
+      unless model_class < BarkestCore::DbTable   # it better also subclass BarkestCore::DbTable
         puts "\033[0;31m#{model_class.name} is not a subclass of DbTable.\033[0m"
         bad_models+=1
       end
     end
+
   end
 end
 
