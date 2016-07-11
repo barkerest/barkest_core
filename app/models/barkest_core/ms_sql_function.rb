@@ -39,6 +39,7 @@ module BarkestCore
           else
             const_get(connected_object || 'ActiveRecord::Base')
           end
+      raise ArgumentError.new('Connected object must be a class or class name.') unless @conn_handler
       raise ArgumentError.new('Connected object must respond to :connection') unless @conn_handler.respond_to?(:connection)
     end
 
@@ -363,7 +364,7 @@ module BarkestCore
 
         col_info[:data_type] = type
 
-        attr_accessor col_key
+        attr_reader col_key
 
         if type == 'int' || type == 'integer'
           define_method setter do |value|

@@ -2,9 +2,18 @@ require 'test_helper'
 module BarkestCore
   class MsSqlFunctionTest < ActiveSupport::TestCase
 
+    # There is a weird glitch? in ActiveRecord.
+    # If I establish a connection here then ALL ActiveRecord transactions seem to hit up the
+    # SQL server for at least a "reset!" call.  On a high latency (VPN) connection, this is
+    # very noticeable and causes the entire test routine to take several minutes.
+    #
+    # Instead we establish the connection before our tests here and remove the connection
+    # immediately after.  That seems to keep the test suite running quickly.
+    #
+    # Hopefully this is not an issue that occurs during production, I have not noticed it in
+    # development yet, only testing.
     class MyTestFunctionParentTable < ActiveRecord::Base
       self.abstract_class = true
-      establish_connection BarkestCore.db_config(:ms_sql_test)
     end
 
     class MyTestFunction < ::BarkestCore::MsSqlFunction
@@ -50,11 +59,13 @@ SELECT
 
     test 'ms sql function parsing' do
       begin
+        MyTestFunctionParentTable.establish_connection BarkestCore.db_config(:ms_sql_test)
         # set the connection handler
         MyTestFunction.use_connection MyTestFunctionParentTable
         # create the UDF
         MyTestFunction.connection.execute MY_TEST_FUNCTION_DEFINITION
       rescue Exception => e
+        MyTestFunctionParentTable.remove_connection
         skip "Invalid test MSSQL configuration: #{e.message}"
       end
 
@@ -111,6 +122,7 @@ SELECT
 
       ensure
         MyTestFunction.connection.execute "DROP FUNCTION #{MY_TEST_FUNCTION_NAME}"
+        MyTestFunctionParentTable.remove_connection
       end
     end
 

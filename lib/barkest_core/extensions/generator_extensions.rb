@@ -1,4 +1,5 @@
 require 'io/console'
+require 'rails/generators'
 
 Rails::Generators::Base.class_eval do
 
@@ -155,42 +156,39 @@ Rails::Generators::Base.class_eval do
         if level.blank? || ask_for_bool("Would you like to configure a #{level} #{what.singularize} configuration?", false)
           current_config[level] ||= {} unless level.blank?
 
+          env_list = %w(test development production)
+
+          unless level.blank?
+            level,_,envs = level.partition('[')
+            unless envs.blank?
+              env_list = envs.partition(']').first.strip.split(' ')
+            end
+          end
+
           last_env = nil
-          %w(test development production).each do |env|
+          env_list.each do |env|
             tell "Configure the '#{level.blank? ? '' : (level + ':')}#{env}' environment."
             tell '-' * 79
 
-            current = if level.blank?
-                        (current_config[env] || {}).dup
-                      else
-                        (current_config[level][env] || {}).dup
-                      end
+            cur_env = level.blank? ? env : "#{level}_#{env}"
 
+            current = (current_config[cur_env] || {}).dup
 
-            current ||= {}
-
-            if current.blank? || ask_for_bool("Do you want to make changes to the '#{level.blank? ? '' : (level + ':')}#{env}' environment?", false)
+            if current.blank? || ask_for_bool("Do you want to make changes to the '#{cur_env}' environment?", false)
               if last_env
-                if !last_level.blank? && ask_for_bool("Would you like to use the configuration from the '#{last_level}:#{last_env}' environment to start?", false)
-                  current = (current_config[last_level][last_env] || {}).dup
-                elsif ask_for_bool("Would you like to use the configuration from the '#{last_env}' environment to start?", false)
+                if ask_for_bool("Would you like to use the configuration from the '#{last_env}' environment to start?", false)
                   current = (current_config[last_env] || {}).dup
                 end
               end
               current = input_attributes(current, attributes, defaults, hash_key)
             end
 
-            if level.blank?
-              current_config[env] = current
-            else
-              current_config[level][env] = current
-            end
+            current_config[cur_env] = current
 
             tell '-' * 79
 
-            last_env = env
+            last_env = cur_env
           end
-          last_level = level
         end
       end
 

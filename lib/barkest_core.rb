@@ -16,10 +16,9 @@ module BarkestCore
   ##
   # Gets the database configuration for the auth models.
   #
-  # In +database.yml+ you can define either a +barkest_core+ section with
-  # +development+, +production+, and +test+ subsections, or you can define
+  # In +database.yml+ you can define
   # +barkest_core_development+, +barkest_core_production+, and +barkest_core_test+
-  # sections.  If neither method is used, then the +development+, +production+,
+  # sections.  If you do not, then then the +development+, +production+,
   # and +test+ sections are used instead.
   #
   #     test:
@@ -28,25 +27,20 @@ module BarkestCore
   #       ...
   #     production:
   #       ...
-  #     barkest_core:
-  #       test:
-  #         ...
-  #       development:
-  #         ...
-  #       production:
-  #         ...
+  #     barkest_core_production:
+  #       ...
   #
   # Returned hash will have symbol keys.
   def self.db_config(other = nil)
     if other
       avail = ActiveRecord::Base.configurations.to_h.symbolize_keys
-      section = (avail[other] || {}).symbolize_keys
       env = Rails.env.to_sym
-      cfg = if section.include?(env)
-              section[env]
-            else
-              avail[:"#{other}_#{env}"] || avail[env] || ActiveRecord::Base.connection_config
-            end
+                                                # Preference
+      cfg = avail[:"#{other}_#{env}"] ||        # 1: barkest_core_development
+          avail[other.to_sym] ||                # 2: barkest_core
+          avail[env] ||                         # 3: development
+          ActiveRecord::Base.connection_config
+
       (cfg || {}).symbolize_keys
     else
       @db_config ||= db_config(:barkest_core)
