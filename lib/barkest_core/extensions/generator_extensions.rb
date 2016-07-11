@@ -203,16 +203,6 @@ Rails::Generators::Base.class_eval do
     block.call unless options.pretend?
   end
 
-  private
-
-  def trimq(question)
-    question = question.to_s.strip
-    if question[-1] == '?' || question[-1] == ':'
-      question = question[0...-1]
-    end
-    question
-  end
-
   def input_attributes(target_hash, attribute_list, defaults, hash_key = nil)
     attribute_list.each do |data|
       if data.is_a?(Hash)
@@ -243,5 +233,17 @@ Rails::Generators::Base.class_eval do
     end
     target_hash
   end
+
+  private
+
+  def trimq(question)
+    question = question.to_s.strip
+    if question[-1] == '?' || question[-1] == ':'
+      question = question[0...-1]
+    end
+    question
+  end
+
+
 
 end
