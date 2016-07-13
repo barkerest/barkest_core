@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (0.2.5)
+    barkest_core (0.2.6)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       bcrypt (~> 3.1.11)
@@ -137,7 +137,7 @@ GEM
       minitest (>= 5.0)
       ruby-progressbar
     multi_json (1.12.1)
-    net-ldap (0.14.0)
+    net-ldap (0.15.0)
     nokogiri (1.6.8)
       mini_portile2 (~> 2.1.0)
       pkg-config (~> 1.1.7)
