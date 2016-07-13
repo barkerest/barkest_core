@@ -36,4 +36,28 @@ ActiveRecord::Base.class_eval do
     end
   end
 
+  ##
+  # Searches the database to determine if an object with the specified name exists.
+  #
+  # For all adapters, it will check the INFORMATION_SCHEMA views to see if a TABLE, VIEW, or ROUTINE with
+  # the specified name exists.  For SQL Server, it will also check the SysObjects table.
+  #
+  def self.object_exists?(object_name)
+
+    %w(TABLE VIEW ROUTINE).each do |type|
+      sql = "SELECT COUNT(*) AS \"one\" FROM INFORMATION_SCHEMA.#{type}S T WHERE T.#{type}_NAME=?"
+      result = connection.exec_query(sql, name).first
+      return true if result && result['one'] == 1
+    end
+
+    if connection.class.name == 'ActiveRecord::ConnectionAdapters::SQLServerAdapter'
+        # use sysobjects table.
+        sql = 'SELECT "id" FROM "sysobjects" WHERE "name"=?'
+        result = connection.exec_query(sql, name).first
+        return true if result && result['id']
+    end
+
+    false
+  end
+
 end

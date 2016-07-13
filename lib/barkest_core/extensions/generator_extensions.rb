@@ -234,6 +234,7 @@ Rails::Generators::Base.class_eval do
     target_hash
   end
 
+
   private
 
   def trimq(question)
