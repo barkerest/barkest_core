@@ -48,6 +48,8 @@ Rails::Generators::Base.class_eval do
                   ';37'
                 when :white
                   ';37;1'
+                when :bold
+                  ';1'
                 else
                   ''
               end + 'm'
