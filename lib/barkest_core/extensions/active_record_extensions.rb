@@ -40,26 +40,25 @@ ActiveRecord::Base.class_eval do
   # Searches the database to determine if an object with the specified name exists.
   #
   def self.object_exists?(object_name)
+    safe_name = "'#{object_name.gsub('\'','\'\'')}'"
 
-    if connection.class.name == 'ActiveRecord::ConnectionAdapters::SQLServerAdapter'
-      # use sysobjects table.
-      sql = 'SELECT "id" FROM "sysobjects" WHERE "name"=?'
-      result = connection.exec_query(sql, name).first
-      return true if result && result['id']
-    elsif connection.class.name == 'ActiveRecord::ConnectionAdapters::SQLite3Adapter'
-      # use sqlite_master table.
-      sql = 'SELECT COUNT(*) AS "one" FROM "sqlite_master" WHERE ("type"=\'table\' OR "type"=\'view\') AND ("name"=?)'
-      result = connection.exec_query(sql, name).first
-      return true if result && result['one']  == 1
-    else
-      %w(TABLE VIEW ROUTINE).each do |type|
-        sql = "SELECT COUNT(*) AS \"one\" FROM INFORMATION_SCHEMA.#{type}S T WHERE T.#{type}_NAME=?"
-        result = connection.exec_query(sql, name).first
-        return true if result && result['one'] == 1
-      end
-    end
+    sql =
+        if connection.class.name == 'ActiveRecord::ConnectionAdapters::SQLServerAdapter'
+          # use sysobjects table.
+          "SELECT COUNT(*) AS \"one\" FROM \"sysobjects\" WHERE \"name\"=#{safe_name}"
+        elsif connection.class.name == 'ActiveRecord::ConnectionAdapters::SQLite3Adapter'
+          # use sqlite_master table.
+          "SELECT COUNT(*) AS \"one\" FROM \"sqlite_master\" WHERE (\"type\"='table' OR \"type\"='view') AND (\"name\"=#{safe_name})"
+        else
+          # query the information_schema TABLES and ROUTINES views.
+          "SELECT SUM(Z.\"one\") AS \"one\" FROM (SELECT COUNT(*) AS \"one\" FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME=#{safe_name} UNION SELECT COUNT(*) AS \"one\" FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME=#{safe_name}) AS Z"
+        end
+
+    result = connection.exec_query(sql).first
+    return true if result && result['one'] == 1
 
     false
   end
+
 
 end
