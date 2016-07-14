@@ -8,8 +8,12 @@ module Barkest
 
     desc 'Installs the Barkest functionality into your application.'
 
+    def self.register(installer)
+      installers << installer unless installers.include?(installer)
+    end
+
     def install_modules
-      barkest_installers.each do |inst|
+      installers.each do |inst|
         sep = '-' + ('=---' * 19) + '=-'
         tell "#{sep}\nProcessing #{inst.class}\n#{sep}", :bold
         inst.public_methods(false).each { |method| inst.send(method) }
@@ -18,39 +22,9 @@ module Barkest
 
     private
 
-    def barkest_installers
-      @barkest_installers ||=
-          begin
-            ret = []
-            Gem::Specification.each do |gem|
-              begin
-                require gem.name
-              rescue LoadError
-                nil
-              end
-            end
-
-            Object.constants.each do |const|
-              mod = Object.const_get(const)
-
-              if mod.is_a?(Module)
-                if mod.name != 'Barkest' && mod.name.index('Barkest') == 0
-                  path = "generators/#{mod.name.underscore}/install_generator"
-                  item =
-                      begin
-                        require path
-                        mod.const_get('InstallGenerator')
-                      rescue LoadError
-                        nil
-                      rescue NameError
-                        nil
-                      end
-                  ret << item.new if item
-                end
-              end
-            end
-            ret
-          end
+    def installers
+      @installers ||= [ BarkestCore::InstallGenerator ]
     end
+
   end
 end
