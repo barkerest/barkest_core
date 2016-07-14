@@ -1,3 +1,4 @@
+require 'rubygems'
 
 module Barkest
 
@@ -21,6 +22,14 @@ module Barkest
       @barkest_installers ||=
           begin
             ret = []
+            Gem::Specification.each do |gem|
+              begin
+                require gem.name
+              rescue LoadError
+                nil
+              end
+            end
+
             Object.constants.each do |const|
               mod = Object.const_get(const)
 
