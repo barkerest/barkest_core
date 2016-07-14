@@ -103,19 +103,6 @@ module BarkestCore
         end
   end
 
-  ##
-  # Registers an install generator.
-  def self.register_installer(installer)
-    installer = installer.to_s
-    installers << installer unless installers.include?(installer)
-  end
-
-  ##
-  # Gets the list of installers to run when 'barkest:install' is generated.
-  def self.installers
-    @installers ||= [ 'BarkestCore::InstallGenerator' ]
-  end
-
   # :nodoc:
   def self.config
     BarkestCore::Engine.config
