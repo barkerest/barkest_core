@@ -33,7 +33,14 @@ module BarkestCore
   # Returned hash will have symbol keys.
   def self.db_config(other = nil, env = nil)
     if other
-      avail = ActiveRecord::Base.configurations.to_h.symbolize_keys
+      db_yml = "#{self.app_root}/config/database.yml"
+      avail =
+          if File.exist?(db_yml)
+            YAML.load_file(db_yml).symbolize_keys
+          else
+            ActiveRecord::Base.configurations.to_h.symbolize_keys
+          end
+
       env = (env || Rails.env).to_sym
                                                 # Preference
       cfg = avail[:"#{other}_#{env}"] ||        # 1: barkest_core_development
