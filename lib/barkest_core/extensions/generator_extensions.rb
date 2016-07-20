@@ -64,6 +64,11 @@ Rails::Generators::Base.class_eval do
 
     print "#{trimq(question)} [#{default ? 'Y/n' : 'y/N'}]? "
 
+    if options.force?
+      puts default ? 'Y' : 'N'
+      return default
+    end
+
     answer = STDIN.gets.strip.upcase[0]
 
     return default if answer.blank?
@@ -76,6 +81,11 @@ Rails::Generators::Base.class_eval do
 
     loop do
       print "#{trimq(question)} [#{default}] (. to clear)? "
+
+      if options.force?
+        puts default.to_s
+        return default
+      end
 
       answer = STDIN.gets.strip
 
@@ -104,6 +114,11 @@ Rails::Generators::Base.class_eval do
     loop do
       print "#{question} [#{default}]? "
 
+      if options.force?
+        puts default.to_s
+        return default
+      end
+
       answer = STDIN.gets.strip
 
       return default if answer.blank?
@@ -129,6 +144,11 @@ Rails::Generators::Base.class_eval do
     return default if options.quiet?
 
     print "#{question} [enter to keep, . to clear]: "
+
+    if options.force?
+      puts ''
+      return default
+    end
 
     loop do
       answer1 = STDIN.noecho(&:gets).strip

@@ -16,6 +16,7 @@
 //= require barkest_core/bootstrap-datepicker
 //= require barkest_core/jquery.doubleScroll
 //= require barkest_core/masked_edit
+//= require barkest_core/system_status
 //= require_tree .
 //= require barkest_core/field_init
 

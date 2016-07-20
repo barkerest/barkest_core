@@ -3,6 +3,9 @@
 <head>
   <title><%= page_title(yield(:title)) %></title>
   <%= stylesheet_link_tag    'application', media: 'all' %>
+  <script type="text/javascript">
+    application_root_offset = '<%= (root_url[-1] == '/' ? root_url[0...-1] : root_url).gsub("'", "\\'") %>';
+  </script>
   <%= javascript_include_tag 'application' %>
   <%= csrf_meta_tags %>
  <%= render 'layouts/barkest_core/shim' %>

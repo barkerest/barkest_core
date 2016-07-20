@@ -6,6 +6,7 @@ module BarkestCore
 
     include BarkestCore::SessionsHelper
     include BarkestCore::RecaptchaHelper
+    include BarkestCore::StatusHelper
 
     protect_from_forgery with: :exception
     layout 'layouts/application'

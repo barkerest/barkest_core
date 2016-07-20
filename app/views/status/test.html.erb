@@ -1,0 +1,50 @@
+<% provide :title, 'Status Tester' %>
+
+<h1>Status Tester</h1>
+
+<strong>Current Status</strong>
+<ul>
+ <li><%= link_to 'Current Status', status_current_url %></li>
+</ul>
+<br>
+
+<strong>Standard via Redirect</strong>
+<ul>
+ <li><%= link_to 'With Progress', status_test_url(:with_progress) %></li>
+ <li><%= link_to 'Without Progress', status_test_url(:without_progress) %></li>
+</ul>
+<br>
+
+<strong>Inline via Modal</strong>
+<ul>
+ <li><a href="javascript:inline_with_progress()">With Progress</a></li>
+ <li><a href="javascript:inline_without_progress()">Without Progress</a></li>
+ <li><a href="javascript:inline_without_log()">Without Log</a></li>
+</ul>
+
+<script type="text/javascript">
+  function inline_with_progress() {
+   systemStatus.run({
+    inline: true,
+    method: 'GET',
+    submitUrl: '<%= status_test_url(:with_progress) %>'
+   });
+  }
+  function inline_without_progress() {
+   systemStatus.run({
+    inline: true,
+    method: 'GET',
+    submitUrl: '<%= status_test_url(:without_progress) %>'
+   });
+  }
+  // when running without the log, you should provide progress, otherwise the user is presented with
+  // a modal dialog with no output or interaction until the process completes.
+  function inline_without_log() {
+   systemStatus.run({
+    inline: true,
+    inlineNoLog: true,
+    method: 'GET',
+    submitUrl: '<%= status_test_url(:with_progress) %>'
+   });
+  }
+</script>

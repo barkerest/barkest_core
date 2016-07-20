@@ -62,6 +62,16 @@ ActionDispatch::Routing::Mapper.class_eval do
       # group management
       resources :access_groups
 
+      # status paths
+      get       'status/current'          => 'status#current'
+      get       'status/first'            => 'status#first'
+      get       'status/more'             => 'status#more'
+      get       'status/test(/:flag)'     => 'status#test',         as: :status_test
+
+      # system update paths
+      get       'system_update/new'
+      get       'system_update'           => 'system_update#index', as: :system_update
+
     end
   end
 

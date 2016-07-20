@@ -229,3 +229,13 @@ label.plain, div.plain-label label {
     color: $state-danger-text;
   }
 }
+
+/* lists */
+ul.fixed_label {
+  li {
+    strong {
+      width: 90pt;
+      display: inline-block;
+    }
+  }
+}

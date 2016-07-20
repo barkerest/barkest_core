@@ -1,0 +1,31 @@
+<% provide :title, 'System Update' %>
+
+<h1>System Update</h1>
+
+<div class="row">
+  <div class="col-sm-6 col-sm-offset-3">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h4 class="panel-title">System Update</h4>
+      </div>
+      <div class="panel-body">
+        <h5>Current Version</h5>
+        <ul class="fixed_label">
+          <li><strong><%= Rails.application.app_name %>:</strong> <%= Rails.application.app_version %>
+          <ul class="fixed_label">
+            <% @additional.each do |(gem,ver)| %>
+                <li><strong><%= gem %>:</strong> <%= ver %></li>
+            <% end %>
+          </ul></li>
+        </ul>
+        <br>
+        <%= link_to 'Attempt System Update', system_update_new_path, class: 'btn btn-warning' %>
+        <br>
+        <br>
+        <small>
+          A system update will render the <%= Rails.application.app_name %> app unusable until the update finishes.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
