@@ -80,7 +80,7 @@ class SystemUpdateController < ApplicationController
 
                       send(:before_bundle, shell) if respond_to?(:before_bundle)
                       log_header 'Bundling gems'
-                      shell.exec("\"#{@bundle_path}\" install --deployment",     &rtlog)
+                      shell.exec("\"#{@bundle_path}\" install --deployment",    &rtlog)
 
                       send(:before_db_update, shell) if respond_to?(:before_db_update)
                       log_header 'Updating database'

@@ -46,7 +46,7 @@ BarkestCore::InstallGenerator.class_eval do
       if File.exist?(dest) && File.read(dest).strip == contents.strip
         tell "> '#{dest}' is good.", :bright_green
       else
-        if !File.exist?(dest) || ask_for_bool("Would you like to update '#{dest}'?", true) == false
+        if !File.exist?(dest) || ask_for_bool("Would you like to update '#{dest}'?", true)
           perform "> #{File.exist?(dest) ? 'creating' : 'updating'} \'#{dest}\'..." do
             File.write dest, contents
           end
