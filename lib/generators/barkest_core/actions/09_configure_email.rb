@@ -32,4 +32,37 @@ BarkestCore::InstallGenerator.class_eval do
     configure_the 'email connection', config_file, attributes, 'config_mode', default
   end
 
+  def test_email
+    config_file = 'config/email.yml'
+
+    config_data = YAML.load_file(config_file).symbolize_keys
+
+    [ :test, :development, :production ].each do |section|
+      cfg = (config_data[section] || {}).symbolize_keys
+      if cfg[:config_mode].to_s.downcase == 'smtp'
+        tell "> Testing #{section} email config..."
+        begin
+          smtp = Net::SMTP.new(cfg[:address], cfg[:port])
+          begin
+            smtp.enable_ssl if cfg[:ssl]
+            smtp.start(cfg[:default_hostname], cfg[:user_name], cfg[:password], cfg[:authentication].to_sym)
+            smtp.send_message(<<-MESSAGE, cfg[:default_sender], cfg[:default_recipient])
+From: #{cfg[:default_sender]}
+To: #{cfg[:default_recipient]}
+Subject: Test message
+
+This is a test message sent with the #{section} configuration for #{cfg[:default_hostname]}.
+            MESSAGE
+          ensure
+            smtp.finish rescue nil
+          end
+          tell '  Successfully sent test message.', :green
+        rescue =>e
+          tell "  Failed to send test message: #{e.inspect}", :red
+        end
+
+      end
+    end
+  end
+
 end
