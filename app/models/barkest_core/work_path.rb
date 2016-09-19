@@ -1,3 +1,5 @@
+require 'tmpdir'
+
 module BarkestCore
   ##
   # This class simply locates a temporary working directory for the application.
@@ -13,13 +15,14 @@ module BarkestCore
     def self.location
       @location ||=
           begin
+            retval = nil
             %w(/run/shm /var/run/shm /dev/shm /tmp).each do |root|
               if Dir.exist?(root)
-                @location = try_path(root)
-                break if @location
+                retval = try_path(root)
+                break if retval
               end
             end
-            @location
+            retval || try_path(Dir.tmpdir)
           end
     end
 
@@ -52,6 +55,9 @@ module BarkestCore
     end
 
     def self.try_path(path)
+      return nil if path.blank?
+      path = path.gsub('\\', '/')
+      path = path[0...-1] if path[-1] == '/'
       path += '/barkest_' + app_name
       return nil unless (Dir.exist?(path) || Dir.mkdir(path))
       begin

@@ -11,10 +11,14 @@ module BarkestCore
     test 'should get valid path for temp file' do
       path = BarkestCore::WorkPath.path_for('test.file')
       assert_not_nil path
-      assert_nothing_raised do
-        File.write path, 'This is a test.'
-        File.delete path
-      end
+
+      # we should be able to write and delete the test file successfully.
+      # ironically, this is the same code used in the WorkPath class
+      # to verify the path is usable, which makes this redundant, but
+      # testing is supposed to be thorough, so I'm leaving it in place.
+      File.write path, 'This is a test.'
+      File.delete path
+
     end
 
 

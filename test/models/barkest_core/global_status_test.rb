@@ -5,14 +5,24 @@ module BarkestCore
 
     test 'should allow running code in a block' do
       assert_not BarkestCore::GlobalStatus.locked?
+
       BarkestCore::GlobalStatus.lock_for do |stat|
         assert BarkestCore::GlobalStatus.locked?
         assert stat
+
+        # set the status using our stat object.
         stat.set_status 'Hello', 10
+        cur_stat = stat.get_status
+        assert_equal 'Hello', cur_stat[:message]
+        assert_equal 10, cur_stat[:percent].to_s.to_i
+
+        # verify the global status reports correctly.
         cur_stat = BarkestCore::GlobalStatus.current
         assert_equal 'Hello', cur_stat[:message]
         assert_equal 10, cur_stat[:percent].to_s.to_i
       end
+
+      # after the block, the status should be cleared.
       cur_stat = BarkestCore::GlobalStatus.current
       assert_not_equal 'Hello', cur_stat[:message]
       assert_not_equal 10, cur_stat[:percent].to_s.to_i

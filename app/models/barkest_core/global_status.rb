@@ -28,20 +28,27 @@ module BarkestCore
     # If you specify a status file, then that file will be used for the locking and status reporting.
     # Otherwise, the "global_lock" file will be used.
     def initialize(status_file = nil)
-      @handle = nil
+      @lock_handle = nil
+      @stat_handle = nil
       @status_file_path = status_file
     end
 
     ##
-    # Gets the path to the global status/lock file.
+    # Gets the path to the global status file.
     def status_file_path
-      @status_file_path ||= WorkPath.path_for('global_lock')
+      @status_file_path ||= WorkPath.path_for('global_status')
+    end
+
+    ##
+    # Gets the path to the global lock file.
+    def lock_file_path
+      @lock_file_path ||= WorkPath.path_for('global_lock')
     end
 
     ##
     # Determines if this instance has a lock on the status/lock file.
     def have_lock?
-      !!@handle
+      !!@lock_handle
     end
 
     ##
@@ -86,9 +93,9 @@ module BarkestCore
     def get_status
       r = {}
       if have_lock?
-        @handle.rewind
-        r[:message] = (@handle.eof? ? 'The current process is busy.' : @handle.readline.strip)
-        r[:percent] = (@handle.eof? ? '' : @handle.readline.strip)
+        @stat_handle.rewind
+        r[:message] = (@stat_handle.eof? ? 'The current process is busy.' : @stat_handle.readline.strip)
+        r[:percent] = (@stat_handle.eof? ? '' : @stat_handle.readline.strip)
         r[:locked] = true
       elsif is_locked?
         if File.exist?(status_file_path)
@@ -146,11 +153,11 @@ module BarkestCore
     #
     def set_status(message, percentage)
       return false unless have_lock?
-      @handle.rewind
-      @handle.truncate 0
-      @handle.write(message.to_s.strip + "\n")
-      @handle.write(percentage.to_s.strip + "\n")
-      @handle.flush
+      @stat_handle.rewind
+      @stat_handle.truncate 0
+      @stat_handle.write(message.to_s.strip + "\n")
+      @stat_handle.write(percentage.to_s.strip + "\n")
+      @stat_handle.flush
       true
     end
 
@@ -160,11 +167,16 @@ module BarkestCore
     # Returns true.
     #
     def release_lock
-      return true unless @handle
-      set_message ''
-      @handle.flock(File::LOCK_UN)
-      @handle.close
-      @handle = nil
+      return true unless @lock_handle
+      begin
+        set_message ''
+        @lock_handle.flock(File::LOCK_UN)
+      ensure
+        @stat_handle.close rescue nil
+        @lock_handle.close rescue nil
+        @stat_handle = @lock_handle = nil
+      end
+
       true
     end
 
@@ -175,20 +187,28 @@ module BarkestCore
     # Returns false if another process holds the lock.
     #
     def acquire_lock
-      return true if @handle
+      return true if @lock_handle
       begin
-        @handle = File.open(status_file_path, File::RDWR | File::CREAT)
-        raise StandardError.new('Already locked') unless @handle.flock(File::LOCK_EX | File::LOCK_NB)
-        @handle.rewind
-        @handle.truncate 0
+        @lock_handle = File.open(lock_file_path, File::RDWR | File::CREAT)
+        raise StandardError.new('Already locked') unless @lock_handle.flock(File::LOCK_EX | File::LOCK_NB)
+        @lock_handle.rewind
+        @lock_handle.truncate 0
+        @stat_handle = File.open(status_file_path, File::RDWR | File::CREAT)
+        raise StandardError.new('Failed to open status') unless @stat_handle
+        @stat_handle.rewind
+        @stat_handle.truncate 0
       rescue
-        if @handle
-          @handle.flock(File::LOCK_UN)
-          @handle.close
+        if @stat_handle
+          @stat_handle.close rescue nil
         end
-        @handle = nil
+        if @lock_handle
+          @lock_handle.flock(File::LOCK_UN) rescue nil
+          @lock_handle.close rescue nil
+        end
+        @stat_handle = nil
+        @lock_handle = nil
       end
-      !!@handle
+      !!@lock_handle
     end
 
     ##

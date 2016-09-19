@@ -22,8 +22,8 @@ Rails::Application::Configuration.class_eval do
           'timeout' => 5000
       }
 
-      Rails.logger.warn "Providing default database configuration for #{Rails.env} environment."
-      puts "\nWARNING: Default database connection in use.\n" if Rails.env.test?
+      Rails.logger.warn "Providing default database configuration for #{Rails.env} environment." unless Rails.logger.nil?
+      puts "\nWARNING: Default database connection in use.\n" if Rails.env.test? || Rails.logger.nil?
 
       # only provide defaults for development and test.
       {
