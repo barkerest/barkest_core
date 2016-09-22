@@ -81,6 +81,7 @@ GEM
       axlsx (>= 2.0.1)
     barkest_ssh (1.0.1)
       net-ssh (~> 3.0.2)
+    bcrypt (3.1.11)
     bcrypt (3.1.11-x86-mingw32)
     bootstrap-sass (3.3.7)
       autoprefixer-rails (>= 5.2.1)
