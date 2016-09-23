@@ -60,7 +60,8 @@ module BarkestCore
     # It is important that you do not set this on the MsSqlFunction class itself.
     #
     def self.function_name
-      @udf
+      return '(none)' if self == MsSqlFunction
+      @udf ||= ''
     end
 
     ##
@@ -70,7 +71,7 @@ module BarkestCore
     #
     def self.function_name=(value)
       raise StandardError.new("Function name for #{self} cannot be set.") if self == MsSqlFunction
-      raise StandardError.new("Function name for #{self} cannot be set more than once.") unless @udf.blank?
+      raise StandardError.new("Function name for #{self} cannot be set more than once.") unless function_name.blank?
       @udf = process_udf(value)
     end
 

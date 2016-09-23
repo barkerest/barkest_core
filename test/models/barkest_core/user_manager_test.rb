@@ -20,14 +20,14 @@ module BarkestCore
 
     test 'should be able to login with test credentials for ldap-only' do
       skip 'LDAP not configured.' unless @ldap_only
-      skip 'Missing :ldap_test_email or :ldap_test_password configuration.' if @cfg[:test_ldap_email].blank? || @cfg[:test_ldap_password].blank?
-      assert @ldap_only.authenticate( @cfg[:test_ldap_email], @cfg[:test_ldap_password], '0.0.0.0' )
+      skip 'Missing :ldap_test_email or :ldap_ldap_password configuration.' if @cfg[:ldap_test_email].blank? || @cfg[:ldap_test_password].blank?
+      assert @ldap_only.authenticate(@cfg[:ldap_test_email], @cfg[:ldap_test_password], '0.0.0.0' )
     end
 
     test 'should not be able to login with test credentials for db-only' do
       skip 'LDAP not configured.' unless @ldap_only
-      skip 'Missing :ldap_test_email or :ldap_test_password configuration.' if @cfg[:test_ldap_email].blank? || @cfg[:test_ldap_password].blank?
-      assert_not @db_only.authenticate( @cfg[:test_ldap_email], @cfg[:test_ldap_password], '0.0.0.0' )
+      skip 'Missing :ldap_test_email or :ldap_test_password configuration.' if @cfg[:ldap_test_email].blank? || @cfg[:ldap_test_password].blank?
+      assert_not @db_only.authenticate(@cfg[:ldap_test_email], @cfg[:ldap_test_password], '0.0.0.0' )
     end
 
   end
