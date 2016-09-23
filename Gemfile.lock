@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (0.4.2)
+    barkest_core (0.4.3)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       barkest_ssh (>= 1.0.1)
@@ -82,7 +82,6 @@ GEM
     barkest_ssh (1.0.1)
       net-ssh (~> 3.0.2)
     bcrypt (3.1.11)
-    bcrypt (3.1.11-x86-mingw32)
     bootstrap-sass (3.3.7)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
