@@ -14,8 +14,8 @@ Gem::Specification.new do |s|
   s.description = 'Core functionality for BarkerEST web apps.'
   s.license     = 'MIT'
 
-  s.files = Dir['{app,config,db,lib}/**/*', 'MIT-LICENSE', 'Rakefile', 'README.md']
-  s.test_files = Dir['test/**/*']
+  s.files = `git ls-files`.split
+  s.files.delete 'barkest_core.gemspec'
 
   s.add_dependency 'rails',                           '~> 4.2.5.1'
   s.add_dependency 'sass-rails',                      '~> 5.0.4'
