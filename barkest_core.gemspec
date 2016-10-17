@@ -40,7 +40,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'encrypted_strings',               '~> 0.3.3'
   s.add_dependency 'net-ldap',                        '>= 0.14.0'
   s.add_dependency 'thor'
-  s.add_dependency 'barkest_ssh',                     '>= 1.0.1'
+  s.add_dependency 'barkest_ssh',                     '>= 1.1.12'
   s.add_dependency 'spawnling',                       '~> 2.1.6'
 
   s.add_development_dependency 'sqlite3'
