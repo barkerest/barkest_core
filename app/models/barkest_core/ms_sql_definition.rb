@@ -6,7 +6,11 @@ module BarkestCore
   # Contains a SQL definition to create a single table, view, function, or procedure.
   #
   # SQL source is not validated, however simple checks are made to ensure that only
-  # one DDL statement is present.
+  # one DDL statement is present unless you are creating a procedure in which case this
+  # check is skipped.
+  #
+  # Function return types are grabbed as well so you know if your function is returning
+  # a table or an integral type.
   class MsSqlDefinition
     InvalidDefinition       = Class.new(StandardError)
 
@@ -18,11 +22,15 @@ module BarkestCore
     UnmatchedComment        = Class.new(InvalidDefinition)
     MissingReturnType       = Class.new(InvalidDefinition)
 
-    attr_reader :name, :type, :definition, :version, :return_type
+    attr_accessor :name_prefix
 
-    def initialize(raw_sql, timestamp = 0)
+    attr_reader :command, :name, :type, :definition, :version, :return_type, :source_location
 
+    def initialize(raw_sql, source = '', timestamp = 0)
+
+      @source_location = source.to_s
       @return_type = :table  # the default.  functions can be different.  procedures can be iffy since they may or may not return a result set.
+      @command = 'CREATE'
 
       if timestamp.is_a?(String)
         timestamp = Time.new(timestamp)
@@ -58,13 +66,15 @@ module BarkestCore
       raise EmptyDefinition, 'raw_sql contains no data' if raw_sql.blank?
 
       # first line should be CREATE VIEW|FUNCTION|PROCEDURE "XYZ"
-      regex = /^CREATE\s+(?<TYPE>VIEW|FUNCTION|PROCEDURE)\s+["\[]?(?<NAME>[A-Z][A-Z0-9_]*)["\]]?\s+(?<DEFINITION>.*)$/im
+      # or ALTER TABLE "XYZ"
+      regex = /^(?:(?<CMD>ALTER)\s+(?<TYPE>TABLE)|(?<CMD>CREATE)\s+(?<TYPE>TABLE|VIEW|FUNCTION|PROCEDURE))\s+["\[]?(?<NAME>[A-Z][A-Z0-9_]*)["\]]?\s+(?<DEFINITION>.*)$/im
       match = regex.match(raw_sql)
 
-      raise MissingCreateStatement, 'raw_sql must contain a "CREATE VIEW|FUNCTION|PROCEDURE" statement' unless match
+      raise MissingCreateStatement, 'raw_sql must contain a "CREATE|ALTER VIEW|FUNCTION|PROCEDURE" statement' unless match
 
-      @name = match['NAME']
+      @command = match['CMD'].upcase
       @type = match['TYPE'].upcase
+      @name = match['NAME']
       @definition = match['DEFINITION'].strip
 
       # we're going to test the definition loosely.
@@ -143,20 +153,48 @@ module BarkestCore
       end
 
       # set the version.
-      @version = timestamp.to_s + Zlib.crc32(@definition).to_s(16).ljust(8,'0')
-
+      @version = timestamp.to_s.ljust(12, '0') + Zlib.crc32(@definition).to_s(16).ljust(8,'0').upcase
     end
 
-    def to_create_sql
-      "CREATE #{type} \"#{name}\"\n#{definition}"
+    def prefixed_name
+      prefix = name_prefix.to_s
+      return name if prefix == ''
+      return name if name.index(prefix) == 0
+      prefix + name
     end
 
-    def to_drop_sql
-      "DROP #{type} \"#{name}\""
+    def update_sql
+      "#{command} #{type} \"#{prefixed_name}\"\n#{definition}"
+    end
+
+    def drop_sql
+      "DROP #{type} \"#{prefixed_name}\""
+    end
+
+    def grant_sql(user_name)
+      sel_exec = if type == 'PROCEDURE'
+                   'EXECUTE'
+                 elsif type == 'FUNCTION' && return_type != :table
+                   'EXECUTE'
+                 elsif type == 'TABLE'
+                   'SELECT, INSERT, UPDATE, DELETE'
+                 else
+                   'SELECT'
+                 end
+
+      "GRANT VIEW DEFINITION,#{sel_exec} ON \"#{prefixed_name}\" TO \"#{user_name}\""
     end
 
     def to_s
       "#{type} #{name}"
+    end
+
+    def ==(other)
+      return false unless other.is_a?(MsSqlDefinition)
+      return false unless other.name == name
+      return false unless other.type == type
+      return false unless other.definition == definition
+      true
     end
 
   end
