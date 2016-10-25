@@ -8,6 +8,9 @@ module BarkestCore
   # object in the database.
   class MsSqlDbUpdater
 
+    VERSION_TABLE_NAME = 'zz_barkest__versions'
+    private_constant :VERSION_TABLE_NAME
+
     attr_reader :table_prefix
 
     def initialize(options = {})
@@ -19,14 +22,12 @@ module BarkestCore
       valid_regex = /^[a-z][a-z0-9_]*$/im
       raise 'invalid table prefix' unless valid_regex.match(@table_prefix)
 
-      # 'sql/barkest' relative to the running application.
-      @source_paths = [ ]
-      add_source_path 'sql/barkest'
-
-      @sources = [ ]
-
       @conn = Class.new(ActiveRecord::Base)
+      @sources = [ ]
+      @source_paths = [ ]
 
+      # 'sql/barkest' relative to the running application.
+      add_source_path 'sql/barkest'
     end
 
     def source_paths
@@ -86,18 +87,58 @@ module BarkestCore
         raise 'provided update user does not have full access to the database' unless have_db_control?
       end
 
-      # TODO: Create tracking table.
+      unless @conn.object_exists?(VERSION_TABLE_NAME)
+        debug 'Creating version tracking table...'
+        db_connection.execute <<-EOSQL
+CREATE TABLE [#{VERSION_TABLE_NAME}] (
+  [object_name] VARCHAR(120) NOT NULL PRIMARY KEY,
+  [object_type] VARCHAR(40) NOT NULL,
+  [object_version] VARCHAR(40) NOT NULL,
+  [created] DATETIME NOT NULL,
+  [updated] DATETIME NOT NULL,
+  [created_by] VARCHAR(120),
+  [updated_by] VARCHAR(120)
+)
+        EOSQL
+      end
 
-      if (proc = options[:before_update])
+      if (proc = (options[:before_update] || options[:pre_update]))
         if proc.respond_to?(:call)
+          debug 'Running pre-update code...'
           proc.call db_connection, runtime_user
         end
       end
 
-      # TODO: Process all sources.
+      debug 'Processing source list...'
+      sources.each do |src|
+        src.name_prefix = table_prefix
 
-      if (proc = options[:after_update])
+        cur_ver = get_version src.prefixed_name
+
+        if cur_ver
+          raise "object type mismatch for #{src.prefixed_name}" unless src.type.upcase == cur_ver['object_type'].upcase
+          if cur_ver['object_version'].to_i >= src.version.to_i
+            debug " > Preserving #{src.prefixed_name}..."
+            next  # source
+          else
+            debug " > Updating #{src.prefixed_name}..."
+            if src.command.upcase == 'CREATE'
+              db_connection.execute src.drop_sql
+            end
+          end
+        else
+          debug " > Creating #{src.prefixed_name}..."
+        end
+
+        db_connection.execute src.update_sql
+        db_connection.execute src.grant_sql
+
+        src.name_prefix = ''
+      end
+
+      if (proc = (options[:after_update] || options[:post_update]))
         if proc.respond_to?(:call)
+          debug 'Running post-update code...'
           proc.call db_connection, runtime_user
         end
       end
@@ -106,6 +147,31 @@ module BarkestCore
     end
 
     private
+
+    def get_version(object_name)
+      object_name = object_name.to_s.gsub("'", "''")
+      db_connection.exec_query("SELECT [object_name], [object_type], [object_version], [created], [updated], [created_by], [updated_by] FROM [#{VERSION_TABLE_NAME}] WHERE [object_name]='#{object_name}'").first
+    end
+
+    def set_version(object_name, object_type, object_version)
+      raw_obj_name = object_name
+      existing = get_version(raw_obj_name)
+
+      object_name = object_name.to_s.gsub("'", "''")
+      object_type = object_type.to_s.gsub("'", "''")
+      object_version = object_version.to_s.gsub("'", "''")
+      time = Time.now.strftime('%Y-%m-%d %H:%M:%S').gsub("'", "''")
+      app = (Rails && Rails.application) ? Rails.application.class.to_s.gsub("'", "''") : '<UNKNOWN>'
+
+      if existing
+        raise 'object type mismatch' unless existing['object_type'] == object_type
+        db_connection.execute "UPDATE [#{VERSION_TABLE_NAME}] SET [object_version]='#{object_version}', [updated]='#{time}', [updated_by]='#{app}' WHERE [object_name]='#{object_name}'"
+      else
+        db_connection.execute "INSERT INTO [#{VERSION_TABLE_NAME}] ([object_name], [object_type], [object_version], [created], [updated], [created_by], [updated_by]) VALUES ('#{object_name}','#{object_type}','#{object_version}','#{time}','#{time}','#{app}','#{app}')"
+      end
+
+      get_version raw_obj_name
+    end
 
     def db_connection
       @conn.connection
