@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (1.0.0)
+    barkest_core (1.0.1)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       barkest_ssh (>= 1.1.12)
@@ -70,7 +70,7 @@ GEM
       tzinfo (~> 1.1)
     ansi (1.5.0)
     arel (6.0.3)
-    autoprefixer-rails (6.5.1)
+    autoprefixer-rails (6.5.1.1)
       execjs
     axlsx (2.0.1)
       htmlentities (~> 4.3.1)
@@ -217,9 +217,9 @@ GEM
     ttfunk (1.4.0)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    tzinfo-data (1.2016.7)
+    tzinfo-data (1.2016.8)
       tzinfo (>= 1.0.0)
-    uglifier (3.0.2)
+    uglifier (3.0.3)
       execjs (>= 0.3.0, < 3)
     web-console (3.3.0)
       activemodel (>= 4.2)

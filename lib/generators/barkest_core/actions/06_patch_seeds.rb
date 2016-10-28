@@ -7,6 +7,7 @@ BarkestCore::InstallGenerator.class_eval do
     unless Dir.exists?('db/seeds')
       if ask_for_bool("Your application does not currently have a 'db/seeds' directory.\nBarkestCore can alter your application to make use of multiple seeding files.\nDo you want to create the 'db/seeds' directory to enable this behavior?", true)
         perform '> creating \'db/seeds\' directory.' do
+          Dir.mkdir 'db' unless Dir.exists?('db')
           Dir.mkdir 'db/seeds'
         end
       else

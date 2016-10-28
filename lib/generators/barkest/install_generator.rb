@@ -18,15 +18,23 @@ module Barkest
 
     private
 
+    # override this to process additional gems.
+    def gem_should_be_checked?(gem_name)
+      gem.name.index('barkest_') == 0
+    end
+
     def installers
       @installers ||= find_modules
     end
 
     def find_modules
       ret = []
+      verbose_module_scan = (ENV['VERBOSE_MODULE_SCAN'].to_s.to_i != 0)
+
       # generator is run from root of app directory
       Gem::Specification.each do |gem|
-        if gem.name.index('barkest_') == 0
+        if gem_should_be_checked?(gem.name)
+          puts "Checking for installer in '#{gem.name}' gem." if verbose_module_scan
           installer =
               begin
                 # ensure the gem has been loaded.
@@ -39,17 +47,19 @@ module Barkest
                   klass_name = "#{gem.name.camelcase}::InstallGenerator"
                   begin
                     klass = Object.const_get(klass_name)
-                    klass.new
+                    ret = klass.new
+                    puts "Generated instance of class '#{klass_name}'." if verbose_module_scan
+                    ret
                   rescue NameError
-                    puts "Failed to load '#{klass_name}'."
+                    puts "Failed to load class '#{klass_name}'." if verbose_module_scan
                     nil
                   end
                 rescue LoadError
-                  puts "Failed to load '#{inst_path}'."
+                  puts "Failed to load file '#{inst_path}'." if verbose_module_scan
                   nil
                 end
               rescue LoadError
-                puts "Failed to load '#{gem.name}'."
+                puts "Failed to load gem '#{gem.name}'." if verbose_module_scan
                 nil
               end
           ret << installer unless installer.nil?
