@@ -8,12 +8,22 @@ module Barkest
 
     desc 'Installs the Barkest functionality into your application.'
 
+    argument :action, type: :string, default: '', desc: 'Specific action to run.'
+
+
     def install_modules
+      meth = action.to_s == '' ? nil : action.to_sym
+
       installers.each do |inst|
         sep = '-' + ('=---' * 19) + '=-'
         tell "#{sep}\nProcessing #{inst.class}\n#{sep}", :bold
-        inst.public_methods(false).each { |method| inst.send(method) }
+        if meth
+          inst.send(meth) if inst.respond_to?(meth)
+        else
+          inst.public_methods(false).each { |method| inst.send(method) }
+        end
       end
+
     end
 
     private
