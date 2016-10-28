@@ -47,9 +47,9 @@ module Barkest
                   klass_name = "#{gem.name.camelcase}::InstallGenerator"
                   begin
                     klass = Object.const_get(klass_name)
-                    ret = klass.new
+                    inst = klass.new
                     puts "Generated instance of class '#{klass_name}'." if verbose_module_scan
-                    ret
+                    inst
                   rescue NameError
                     puts "Failed to load class '#{klass_name}'." if verbose_module_scan
                     nil
