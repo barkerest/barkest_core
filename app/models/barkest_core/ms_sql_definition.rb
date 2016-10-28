@@ -122,7 +122,7 @@ module BarkestCore
 
         rtype = match['TYPE'].downcase
         rsize = 0
-        if rtype.include('(')
+        if rtype.include?('(')
           rtype,_,rsize = rtype.partition('(')
           rsize = rsize.partition(')')[0].to_i
         end
@@ -161,6 +161,10 @@ module BarkestCore
       return name if prefix == ''
       return name if name.index(prefix) == 0
       prefix + name
+    end
+
+    def is_create?
+      command == 'CREATE'
     end
 
     def update_sql

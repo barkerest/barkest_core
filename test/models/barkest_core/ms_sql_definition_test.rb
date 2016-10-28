@@ -9,7 +9,10 @@ module BarkestCore
         ['ABC',     'VIEW', "-- This is a comment about this view.\nCREATE VIEW [ABC] AS SELECT 1 AS [VALUE]\n/* Just a simple comment. */"],
         ['ABC_123', 'VIEW', "CREATE VIEW ABC_123 AS SELECT 1 AS [Index]\nUNION SELECT 2\nUNION SELECT 3\n-- This is not a drop statement."],
 
-        ['AEIOU',   'FUNCTION', 'CREATE FUNCTION [AEIOU] (num AS INTEGER) RETURNS TABLE AS SELECT ISNULL(num,0) * 5 AS [five_times_more]'],
+        ['AEIOU',   'FUNCTION', 'CREATE FUNCTION [AEIOU] (@num AS INTEGER) RETURNS TABLE AS SELECT ISNULL(@num,0) * 5 AS [five_times_more]'],
+
+        ['ZYX',     'TABLE', 'CREATE TABLE [ZYX] ([id] INTEGER NOT NULL PRIMARY KEY, [name] VARCHAR(200))'],
+        ['ZYX',     'TABLE', 'ALTER TABLE [ZYX] ADD COLUMN [col2] INTEGER'],
     ]
 
     INVALID_LIST = [
@@ -24,10 +27,6 @@ module BarkestCore
         [
             BarkestCore::MsSqlDefinition::MissingCreateStatement,
             'SELECT 1 AS Value'
-        ],
-        [
-            BarkestCore::MsSqlDefinition::MissingCreateStatement,
-            'CREATE TABLE XYZ (ID INTEGER PRIMARY KEY, NAME VARCHAR(100))'
         ],
         [
             BarkestCore::MsSqlDefinition::ExtraDDL,
@@ -68,6 +67,14 @@ module BarkestCore
         [
             BarkestCore::MsSqlDefinition::UnmatchedComment,
             'create view xyz as select 1 as value /* a comment that is closed twice */ */'
+        ],
+        [
+            BarkestCore::MsSqlDefinition::MissingReturnType,
+            'create function xyz (alpha integer) as select alpha'
+        ],
+        [   # alter is only valid for tables (for our purposes) since views and functions are recreated.
+            BarkestCore::MsSqlDefinition::MissingCreateStatement,
+            'alter function xyz (@alpha integer) returns table as select @alpha'
         ],
     ]
 

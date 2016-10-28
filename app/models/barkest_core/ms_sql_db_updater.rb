@@ -8,10 +8,28 @@ module BarkestCore
   # object in the database.
   class MsSqlDbUpdater
 
+    ##
+    # The base error for errors raised by the updater class.
+    UpdateError = Class.new(StandardError)
+
+    ##
+    # The error raised when the provided connection does not provide a user with full control over the database.
+    NeedFullAccess = Class.new(UpdateError)
+
+    ##
+    # The error raised when an object type doesn't match the previous type for the object with the specified name.
+    ObjectTypeMismatch = Class.new(UpdateError)
+
+    ##
+    # The name of the table holding the object versions.
     VERSION_TABLE_NAME = 'zz_barkest__versions'
-    private_constant :VERSION_TABLE_NAME
+
 
     attr_reader :table_prefix
+
+    class Conn < ActiveRecord::Base
+      self.abstract_class = true
+    end
 
     def initialize(options = {})
       options = {
@@ -22,12 +40,25 @@ module BarkestCore
       valid_regex = /^[a-z][a-z0-9_]*$/im
       raise 'invalid table prefix' unless valid_regex.match(@table_prefix)
 
-      @conn = Class.new(ActiveRecord::Base)
       @sources = [ ]
       @source_paths = [ ]
 
       # 'sql/barkest' relative to the running application.
       add_source_path 'sql/barkest'
+
+      # and any other paths provided via options.
+      if options[:source_paths]
+        if options[:source_paths].is_a?(String)
+          add_source_path options[:source_paths]
+        elsif options[:source_paths].respond_to?(:each)
+          options[:source_paths].each do |path|
+            add_source_path path.to_s
+          end
+        else
+          add_source_path path.to_s
+        end
+      end
+
     end
 
     def source_paths
@@ -42,6 +73,11 @@ module BarkestCore
       sql_def = BarkestCore::MsSqlDefinition.new(sql, '', timestamp)
       sql_def.instance_variable_set(:@source_location, "::#{sql_def.name}::")
       add_sql_def sql_def
+      nil
+    end
+
+    def add_source_definition(definition)
+      add_sql_def definition
       nil
     end
 
@@ -65,31 +101,32 @@ module BarkestCore
 
     def update_db(config, options = {})
 
-      options ||= {}
+      begin
+        options ||= {}
 
-      runtime_user = config[:username]
+        runtime_user = config[:username]
 
-      @conn.remove_connection
-      @conn.establish_connection config
+        Conn.remove_connection
+        Conn.establish_connection config
 
-      if have_db_control?
-        warn "WARNING: Runtime user '#{runtime_user}' has full access to the database. (this is not recommended)"
-      else
-        raise 'please provide update_username and update_password for a user with full access to the database' unless config[:update_username]
+        if have_db_control?
+          warn "WARNING: Runtime user '#{runtime_user}' has full access to the database. (this is not recommended)" unless Rails.env.test?
+        else
+          raise NeedFullAccess, 'please provide update_username and update_password for a user with full access to the database' unless config[:update_username]
 
-        use_config = config.dup
-        use_config[:username] = config[:update_username]
-        use_config[:password] = config[:update_password]
+          use_config = config.dup
+          use_config[:username] = config[:update_username]
+          use_config[:password] = config[:update_password]
 
-        @conn.remove_connection
-        @conn.establish_connection use_config
+          Conn.remove_connection
+          Conn.establish_connection use_config
 
-        raise 'provided update user does not have full access to the database' unless have_db_control?
-      end
+          raise NeedFullAccess, 'provided update user does not have full access to the database' unless have_db_control?
+        end
 
-      unless @conn.object_exists?(VERSION_TABLE_NAME)
-        debug 'Creating version tracking table...'
-        db_connection.execute <<-EOSQL
+        unless Conn.object_exists?(VERSION_TABLE_NAME)
+          debug 'Creating version tracking table...'
+          db_connection.execute <<-EOSQL
 CREATE TABLE [#{VERSION_TABLE_NAME}] (
   [object_name] VARCHAR(120) NOT NULL PRIMARY KEY,
   [object_type] VARCHAR(40) NOT NULL,
@@ -99,51 +136,58 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
   [created_by] VARCHAR(120),
   [updated_by] VARCHAR(120)
 )
-        EOSQL
-      end
-
-      if (proc = (options[:before_update] || options[:pre_update]))
-        if proc.respond_to?(:call)
-          debug 'Running pre-update code...'
-          proc.call db_connection, runtime_user
+          EOSQL
         end
-      end
 
-      debug 'Processing source list...'
-      sources.each do |src|
-        src.name_prefix = table_prefix
-
-        cur_ver = get_version src.prefixed_name
-
-        if cur_ver
-          raise "object type mismatch for #{src.prefixed_name}" unless src.type.upcase == cur_ver['object_type'].upcase
-          if cur_ver['object_version'].to_i >= src.version.to_i
-            debug " > Preserving #{src.prefixed_name}..."
-            next  # source
-          else
-            debug " > Updating #{src.prefixed_name}..."
-            if src.command.upcase == 'CREATE'
-              db_connection.execute src.drop_sql
-            end
+        if (proc = (options[:before_update] || options[:pre_update]))
+          if proc.respond_to?(:call)
+            debug 'Running pre-update code...'
+            proc.call db_connection, runtime_user
           end
-        else
-          debug " > Creating #{src.prefixed_name}..."
         end
 
-        db_connection.execute src.update_sql
-        db_connection.execute src.grant_sql
+        debug 'Processing source list...'
+        sources.each do |src|
+          src.name_prefix = table_prefix
 
-        src.name_prefix = ''
-      end
+          cur_ver = get_version src.prefixed_name
 
-      if (proc = (options[:after_update] || options[:post_update]))
-        if proc.respond_to?(:call)
-          debug 'Running post-update code...'
-          proc.call db_connection, runtime_user
+          if cur_ver
+            raise ObjectTypeMismatch, "object type mismatch for #{src.prefixed_name}" unless src.type.upcase == cur_ver['object_type'].upcase
+            if cur_ver['object_version'].to_i >= src.version.to_i
+              debug " > Preserving #{src.prefixed_name}..."
+              next  # source
+            else
+              debug " > Updating #{src.prefixed_name}..."
+              if src.is_create?
+                db_connection.execute src.drop_sql
+              end
+            end
+          else
+            debug " > Creating #{src.prefixed_name}..."
+          end
+
+          db_connection.execute src.update_sql
+          db_connection.execute src.grant_sql(runtime_user)
+          set_version src.prefixed_name, src.type, src.version
+
+          src.name_prefix = ''
         end
+
+        if (proc = (options[:after_update] || options[:post_update]))
+          if proc.respond_to?(:call)
+            debug 'Running post-update code...'
+            proc.call db_connection, runtime_user
+          end
+        end
+
+        yield db_connection, runtime_user if block_given?
+
+      ensure
+        Conn.remove_connection
       end
 
-      yield db_connection, runtime_user if block_given?
+      true
     end
 
     private
@@ -164,7 +208,7 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
       app = (Rails && Rails.application) ? Rails.application.class.to_s.gsub("'", "''") : '<UNKNOWN>'
 
       if existing
-        raise 'object type mismatch' unless existing['object_type'] == object_type
+        raise ObjectTypeMismatch, 'object type mismatch' unless existing['object_type'] == object_type
         db_connection.execute "UPDATE [#{VERSION_TABLE_NAME}] SET [object_version]='#{object_version}', [updated]='#{time}', [updated_by]='#{app}' WHERE [object_name]='#{object_name}'"
       else
         db_connection.execute "INSERT INTO [#{VERSION_TABLE_NAME}] ([object_name], [object_type], [object_version], [created], [updated], [created_by], [updated_by]) VALUES ('#{object_name}','#{object_type}','#{object_version}','#{time}','#{time}','#{app}','#{app}')"
@@ -174,7 +218,7 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
     end
 
     def db_connection
-      @conn.connection
+      Conn.connection
     end
 
     def have_db_control?
@@ -208,13 +252,13 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
           return nil
         end
         if existing.type != sql_def.type
-          raise "Cannot change type of object named #{existing.name} from #{existing.type} to #{sql_def.type}."
+          raise ObjectTypeMismatch, "Cannot change type of object named #{existing.name} from #{existing.type} to #{sql_def.type}."
         end
         if existing.version.to_i > sql_def.version.to_i
           warn "A #{existing.type.downcase} named #{existing.name} is already defined with newer source."
           return nil
         end
-        if sql_def.command == 'CREATE'
+        if sql_def.is_create?
           warn "Removing old definition for #{existing.type.downcase} named #{existing.name}."
           @sources.delete existing
         end
