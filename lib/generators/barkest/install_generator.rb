@@ -20,7 +20,7 @@ module Barkest
 
     # override this to process additional gems.
     def gem_should_be_checked?(gem_name)
-      gem.name.index('barkest_') == 0
+      gem_name.index('barkest_') == 0
     end
 
     def installers
