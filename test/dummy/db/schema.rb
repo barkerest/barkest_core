@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160701005706) do
+ActiveRecord::Schema.define(version: 20161108155029) do
 
   create_table "access_group_group_members", force: :cascade do |t|
     t.integer "group_id",  null: false
@@ -47,6 +47,15 @@ ActiveRecord::Schema.define(version: 20160701005706) do
   end
 
   add_index "ldap_access_groups", ["group_id", "name"], name: "unique_ldap_access_groups", unique: true
+
+  create_table "system_configs", force: :cascade do |t|
+    t.string   "key",        limit: 128, null: false
+    t.text     "value"
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
+  end
+
+  add_index "system_configs", ["key"], name: "unique_system_configs", unique: true
 
   create_table "user_login_histories", force: :cascade do |t|
     t.integer  "user_id",                null: false
