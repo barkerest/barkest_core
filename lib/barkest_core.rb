@@ -17,6 +17,7 @@ module BarkestCore
   # Gets the database configuration for the auth models.
   #
   # The +barkest_core+ database must be defined in +database.yml+.
+  # This will either be an explicit +barkest_core+ section or a normal environment section (ie - +production+).
   # However other databases can be defined via the SystemConfig model.
   #
   # The +database.yml+ file is checked first, followed by SystemConfig.
@@ -26,8 +27,7 @@ module BarkestCore
   # For instance, if you want the configuration for :mydb in the :development environment:
   # * Check in +database.yml+ for "mydb_development".
   # * Check in +database.yml+ for "mydb".
-  # * Check in SystemConfig for "mydb_development".
-  # * Check in SystemConfig for "mydb".
+  # * Check in SystemConfig for "mydb" (unless "mydb" == "barkest_core").
   # * Check in +database.yml+ for "development".
   # * Fall back on default connection used by ActiveRecord::Base.
   #
@@ -77,26 +77,11 @@ module BarkestCore
   ##
   # Gets the email configuration for the application.
   #
-  # Define these settings in your +config/email.yml+ file.
+  # Email settings are stored under the :email key within SystemConfig.
   #
-  # Or define them using the :email key with SystemConfig.
-  #
-  # Keys will be symbols.
+  # Returned keys will be symbols.
   def self.email_config
-    @email_config ||=
-        begin
-          email_yml = "#{self.app_root}/config/email.yml"
-
-          cfg = SystemConfig.get(:email)
-
-          unless cfg
-            if File.exist?(email_yml)
-              cfg = YAML.load_file(email_yml)[Rails.env]
-            end
-          end
-
-          email_config_defaults.symbolize_keys.merge( (cfg || {}).symbolize_keys )
-        end
+    @email_config ||= email_config_defaults.symbolize_keys.merge( (SystemConfig.get(:email) || {}).symbolize_keys )
   end
 
   ##
@@ -122,21 +107,13 @@ module BarkestCore
   # If ldap authentication is not configured then internal database authentication
   # is forcibly enabled.  Both modes can be active simultaneously.
   #
+  # Auth settings are stored under the :auth key within SystemConfig.
+  #
+  # Returned keys will be symbols.
   def self.auth_config
     @auth_config ||=
         begin
-          auth_yml = "#{self.app_root}/config/auth.yml"
-
-          cfg = SystemConfig.get(:auth)
-
-          unless cfg
-            if File.exist?(auth_yml)
-              cfg = YAML.load_file(auth_yml)[Rails.env]
-            end
-          end
-
-
-          cfg = auth_config_defaults.symbolize_keys.merge( (cfg || {}).symbolize_keys )
+          cfg = auth_config_defaults.symbolize_keys.merge( (SystemConfig.get(:auth) || {}).symbolize_keys )
 
           cfg[:enable_db_auth] = true unless cfg[:enable_ldap_auth]
 

@@ -24,13 +24,26 @@ class SystemConfig < ::BarkestCore::DbTable
   # Gets a value from the database.
   #
   # If the value was stored encrypted, it will be decrypted before being returned.
+  #
+  # As a feature during testing +config/key_name.yml+ will be used if it exists and the database
+  # value is missing.
+  #
   def self.get(key_name)
     record = where(key: key_name.to_s.downcase).first
-    value = record ? record.value : nil
-    if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
-      value = value[:encrypted_value]
-      value = YAML.load(crypto_cipher.decrypt(value)) unless value.nil? || value == ''
+
+    if record
+      value = record.value
+      if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
+        value = value[:encrypted_value]
+        value = YAML.load(crypto_cipher.decrypt(value)) unless value.nil? || value == ''
+      end
+    elsif Rails.env.test?
+      yml_file = "#{BarkestCore.app_root}/config/#{key_name}.yml"
+      value = File.exist?(yml_file) ? YAML.load_file(yml_file) : nil
+    else
+      value = nil
     end
+
     value
   end
 
