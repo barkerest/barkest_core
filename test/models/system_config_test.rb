@@ -44,6 +44,21 @@ class SystemConfigTest < ActiveSupport::TestCase
     assert_uniqueness @item, :key
   end
 
+  test 'get and set should support encryption' do
+    TEST_VALUES.each do |test_value|
+      SystemConfig.set 'abc', test_value, true
+      test = SystemConfig.find_by(key: 'abc')
+
+      assert_not_nil test
+
+      assert_not_equal test_value, test.value
+      assert_equal test_value, SystemConfig.get('abc')
+
+      assert test.value.is_a?(Hash)
+      assert test.value.keys.include?(:encrypted_value)
+    end
+  end
+
   test 'get and set methods should work' do
     TEST_VALUES.each do |test_value|
       SystemConfig.set 'abc', test_value

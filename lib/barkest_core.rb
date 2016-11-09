@@ -16,37 +16,52 @@ module BarkestCore
   ##
   # Gets the database configuration for the auth models.
   #
-  # In +database.yml+ you can define
-  # +barkest_core_development+, +barkest_core_production+, and +barkest_core_test+
-  # sections.  If you do not, then then the +development+, +production+,
-  # and +test+ sections are used instead.
+  # The +barkest_core+ database must be defined in +database.yml+.
+  # However other databases can be defined via the SystemConfig model.
   #
-  #     test:
-  #       ...
-  #     development:
-  #       ...
-  #     production:
-  #       ...
-  #     barkest_core_production:
-  #       ...
+  # The +database.yml+ file is checked first, followed by SystemConfig.
+  # If neither of those defines the specific database, then we fall back on +database.yml+ to load
+  # the global configuration for the environment.
+  #
+  # For instance, if you want the configuration for :mydb in the :development environment:
+  # * Check in +database.yml+ for "mydb_development".
+  # * Check in +database.yml+ for "mydb".
+  # * Check in SystemConfig for "mydb_development".
+  # * Check in SystemConfig for "mydb".
+  # * Check in +database.yml+ for "development".
+  # * Fall back on default connection used by ActiveRecord::Base.
   #
   # Returned hash will have symbol keys.
   def self.db_config(other = nil, env = nil)
     if other
-      db_yml = "#{self.app_root}/config/database.yml"
-      avail =
-          if File.exist?(db_yml)
-            YAML.load_file(db_yml).symbolize_keys
-          else
-            ActiveRecord::Base.configurations.to_h.symbolize_keys
-          end
-
       env = (env || Rails.env).to_sym
-                                                # Preference
-      cfg = avail[:"#{other}_#{env}"] ||        # 1: barkest_core_development
+
+      cfg =
+        begin
+          db_yml = "#{self.app_root}/config/database.yml"
+          avail =
+              if File.exist?(db_yml)
+                YAML.load_file(db_yml).symbolize_keys
+              else
+                ActiveRecord::Base.configurations.to_h.symbolize_keys
+              end
+
+          # for any db connection other than the core connection, check
+          # in the system config table as well.
+          syscfg =
+              if other != :barkest_core
+                SystemConfig.get("#{other}_#{env}") || SystemConfig.get(other)
+              else
+                nil
+              end
+
+          # Preference
+          avail[:"#{other}_#{env}"] ||          # 1: barkest_core_development
           avail[other.to_sym] ||                # 2: barkest_core
-          avail[env] ||                         # 3: development
-          ActiveRecord::Base.connection_config
+          syscfg ||                             # 3/4: SystemConfig: barkest_core_development / SystemConfig: barkest_core
+          avail[env] ||                         # 5: development
+          ActiveRecord::Base.connection_config  # 6: default connection
+        end
 
       (cfg || {}).symbolize_keys
     elsif env

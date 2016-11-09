@@ -1,3 +1,5 @@
+require 'encrypted_strings'
+
 class SystemConfig < ::BarkestCore::DbTable
 
   validates :key,
@@ -18,19 +20,46 @@ class SystemConfig < ::BarkestCore::DbTable
     YAML.load val
   end
 
+  ##
+  # Gets a value from the database.
+  #
+  # If the value was stored encrypted, it will be decrypted before being returned.
   def self.get(key_name)
     record = where(key: key_name.to_s.downcase).first
-    record ? record.value : nil
+    value = record ? record.value : nil
+    if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
+      value = value[:encrypted_value]
+      value = YAML.load(crypto_cipher.decrypt(value)) unless value.nil? || value == ''
+    end
+    value
   end
 
-  def self.set(key_name, value)
+  ##
+  # Stores a value to the database.
+  #
+  # All values are converted into YAML strings before storage.
+  #
+  # If +encrypt+ is set to true, then the value will be encrypted before being stored.
+  def self.set(key_name, value, encrypt = false)
     key_name = key_name.to_s.downcase
+    if encrypt
+      value = crypto_cipher.encrypt(value.to_yaml) unless value.nil? || value == ''
+      value = { encrypted_value: value }
+    end
     record = find_or_initialize_by(key: key_name)
     record.value = value
     record.save
   end
 
   private
+
+  def self.crypto_password
+    @crypto_password ||= Rails.application.secrets[:secret_key_base]
+  end
+
+  def self.crypto_cipher
+    @crypto_cipher ||= EncryptedStrings::SymmetricCipher.new(password: crypto_password)
+  end
 
   def downcase_key
     key.downcase!
