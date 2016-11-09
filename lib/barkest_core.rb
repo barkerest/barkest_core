@@ -48,22 +48,17 @@ module BarkestCore
 
           # for any db connection other than the core connection, check
           # in the system config table as well.
-          syscfg =
-              if other != :barkest_core
-                SystemConfig.get("#{other}_#{env}") || SystemConfig.get(other)
-              else
-                nil
-              end
+          syscfg = (other == :barkest_core) ? nil : SystemConfig.get(other)
 
           # Preference
           avail[:"#{other}_#{env}"] ||          # 1: barkest_core_development
           avail[other.to_sym] ||                # 2: barkest_core
-          syscfg ||                             # 3/4: SystemConfig: barkest_core_development / SystemConfig: barkest_core
-          avail[env] ||                         # 5: development
-          ActiveRecord::Base.connection_config  # 6: default connection
+          syscfg ||                             # 3: SystemConfig: barkest_core
+          avail[env] ||                         # 4: development
+          ActiveRecord::Base.connection_config  # 5: default connection
         end
 
-      (cfg || {}).symbolize_keys
+      (cfg || db_config_defaults(other)).symbolize_keys
     elsif env
       db_config(:barkest_core, env)
     else
@@ -72,9 +67,19 @@ module BarkestCore
   end
 
   ##
+  # Provides the defaults to be returned by db_config when settings are missing.
+  #
+  # Can be overridden by child projects to provide appropriate defaults.
+  def self.db_config_defaults(db_name)
+    { }
+  end
+
+  ##
   # Gets the email configuration for the application.
   #
   # Define these settings in your +config/email.yml+ file.
+  #
+  # Or define them using the :email key with SystemConfig.
   #
   # Keys will be symbols.
   def self.email_config
@@ -82,19 +87,29 @@ module BarkestCore
         begin
           email_yml = "#{self.app_root}/config/email.yml"
 
-          cfg = if File.exist?(email_yml)
-                  YAML.load_file(email_yml)[Rails.env]
-                else
-                  nil
-                end
+          cfg = SystemConfig.get(:email)
 
-          {
-              config_mode: :none,
-              default_sender: 'support@barkerest.com',
-              default_recipient: 'support@barkerest.com',
-              default_hostname: 'localhost'
-          }.merge( (cfg || {}).symbolize_keys )
+          unless cfg
+            if File.exist?(email_yml)
+              cfg = YAML.load_file(email_yml)[Rails.env]
+            end
+          end
+
+          email_config_defaults.symbolize_keys.merge( (cfg || {}).symbolize_keys )
         end
+  end
+
+  ##
+  # Provides the defaults to be returned by email_config when settings are missing.
+  #
+  # Can be overriden by child projects to provide appropriate defaults.
+  def self.email_config_defaults
+    {
+        config_mode: :none,
+        default_sender: 'support@barkerest.com',
+        default_recipient: 'support@barkerest.com',
+        default_hostname: 'localhost',
+    }
   end
 
   ##
@@ -111,18 +126,33 @@ module BarkestCore
     @auth_config ||=
         begin
           auth_yml = "#{self.app_root}/config/auth.yml"
-          cfg = if File.exist?(auth_yml)
-                  YAML.load_file(auth_yml)[Rails.env]
-                else
-                  nil
-                end
-          cfg = {
-              enable_db_auth: true,
-              enable_ldap_auth: false
-          }.merge( (cfg || {}).symbolize_keys )
+
+          cfg = SystemConfig.get(:auth)
+
+          unless cfg
+            if File.exist?(auth_yml)
+              cfg = YAML.load_file(auth_yml)[Rails.env]
+            end
+          end
+
+
+          cfg = auth_config_defaults.symbolize_keys.merge( (cfg || {}).symbolize_keys )
+
           cfg[:enable_db_auth] = true unless cfg[:enable_ldap_auth]
+
           cfg
         end
+  end
+
+  ##
+  # Provides the defaults to be provided by auth_config when settings are missing.
+  #
+  # Can be overriden by child projects to provide appropriate defaults.
+  def self.auth_config_defaults
+    {
+        enable_db_auth: true,
+        enable_ldap_auth: false,
+    }
   end
 
   # :nodoc:
