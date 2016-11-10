@@ -146,30 +146,32 @@ module BarkestCore
   ##
   # Tells the hosting service (Passenger) that we want to restart the application.
   def self.request_restart
-    FileUtils.touch "#{self.app_root}/tmp/restart.txt"
+    FileUtils.touch restart_file
   end
 
   ##
   # Determines if the application is still waiting on a restart to take place.
   def self.restart_pending?
-    restart_file = "#{self.app_root}/tmp/restart.txt"
-
     return false unless File.exist?(restart_file)
+
     request_time = File.mtime(restart_file)
-    start_time = Time.parse(`ps -o lstart --no-headers -p #{Process.pid}`.strip)
 
     request_time > start_time
   end
 
-  ##
-  # Tells passenger to restart this app.
-  #
-  # This will force all configuration changes to be reloaded in any threads passenger may have running.
-  # Ideally you would execute this command and return a redirect to the user that will call up on a freshly
-  # running instance.
-  def passenger_restart_app
-    `#{self.app_root}/bin/bundle exec passenger-config restart-app #{self.app_root}/public`
+
+  private
+
+  def self.restart_file
+    @restart_file ||= "#{self.app_root}/tmp/restart.txt"
   end
+
+  def self.start_time
+    @start_time ||= Time.now
+  end
+
+  # make sure @start_time gets set...
+  start_time
 
 end
 
