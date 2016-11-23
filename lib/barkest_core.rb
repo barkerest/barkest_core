@@ -38,27 +38,21 @@ module BarkestCore
     if other
       @db_configs ||= {}
 
+      other = other.to_sym
       env = (env || Rails.env).to_sym
-
       key = :"#{other}_#{env}"
 
       @db_configs[key] ||=
         begin
-          db_yml = "#{self.app_root}/config/database.yml"
-          avail =
-              if File.exist?(db_yml)
-                YAML.load_file(db_yml).symbolize_keys
-              else
-                ActiveRecord::Base.configurations.to_h.symbolize_keys
-              end
+          avail = avail_db_configs
 
           # for any db connection other than the core connection, check
           # in the system config table as well.
           syscfg = (other == :barkest_core) ? nil : SystemConfig.get(other)
 
           # Preference
-          avail[:"#{other}_#{env}"] ||          # 1: barkest_core_development
-          avail[other.to_sym] ||                # 2: barkest_core
+          avail[key] ||                         # 1: barkest_core_development
+          avail[other] ||                       # 2: barkest_core
           syscfg ||                             # 3: SystemConfig: barkest_core
           avail[env] ||                         # 4: development
           ActiveRecord::Base.connection_config  # 5: default connection
@@ -73,11 +67,24 @@ module BarkestCore
   end
 
   ##
+  # Determines if the configuration for the specified database is stored in the global configuration file.
+  def self.db_config_is_file_based?(db_name)
+    avail = avail_db_configs.keys
+    avail.include?(:"#{db_name}_#{Rails.env}") || avail.include?(:"#{db_name}")
+  end
+
+  ##
+  # Sets the defaults for a database configuration.
+  def self.register_db_config_defaults(db_name, defaults)
+    @db_config_defaults ||= {}
+    @db_config_defaults[db_name.to_sym] = defaults
+  end
+
+  ##
   # Provides the defaults to be returned by db_config when settings are missing.
-  #
-  # Can be overridden by child projects to provide appropriate defaults.
   def self.db_config_defaults(db_name)
-    { }
+    @db_config_defaults ||= {}
+    @db_config_defaults[db_name.to_sym] || {}
   end
 
   ##
@@ -161,6 +168,18 @@ module BarkestCore
 
 
   private
+
+  def self.avail_db_configs
+    @avail_db_configs ||=
+        begin
+          db_yml = "#{self.app_root}/config/database.yml"
+          if File.exist?(db_yml)
+            YAML.load_file(db_yml).symbolize_keys
+          else
+            ActiveRecord::Base.configurations.to_h.symbolize_keys
+          end
+        end
+  end
 
   def self.restart_file
     @restart_file ||= "#{self.app_root}/tmp/restart.txt"

@@ -1,6 +1,7 @@
 require 'jquery-rails'
 require 'bootstrap-sass'
 require 'prawn-rails'
+require 'ntlm/smtp'
 
 module BarkestCore
   class Engine < ::Rails::Engine

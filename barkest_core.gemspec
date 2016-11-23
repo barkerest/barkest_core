@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'thor'
   s.add_dependency 'barkest_ssh',                     '>= 1.1.12'
   s.add_dependency 'spawnling',                       '~> 2.1.6'
+  s.add_dependency 'ruby-ntlm',                       '0.0.3'
 
   s.add_development_dependency 'sqlite3'
   s.add_development_dependency 'faker'

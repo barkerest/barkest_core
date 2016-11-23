@@ -35,7 +35,9 @@ class SystemConfig < ::BarkestCore::DbTable
       value = record.value
       if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
         value = value[:encrypted_value]
-        value = YAML.load(crypto_cipher.decrypt(value)) unless value.nil? || value == ''
+        unless value.nil? || value == ''
+          value = YAML.load(crypto_cipher.decrypt(value)) rescue nil
+        end
       end
     elsif Rails.env.test?
       yml_file = "#{BarkestCore.app_root}/config/#{key_name}.yml"
@@ -67,7 +69,7 @@ class SystemConfig < ::BarkestCore::DbTable
   private
 
   def self.crypto_password
-    @crypto_password ||= Rails.application.secrets[:secret_key_base]
+    @crypto_password ||= Rails.application.secrets[:encrypted_config_key] || Rails.application.secrets[:secret_key_base]
   end
 
   def self.crypto_cipher
