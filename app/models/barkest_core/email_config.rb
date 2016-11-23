@@ -64,14 +64,15 @@ module BarkestCore
         begin
           client.enable_ssl if ssl?
           client.start(default_hostname, user_name, password, authentication.to_sym)
-          client.send_message(<<-MESSAGE, default_sender, default_recipient)
-  From: #{default_sender}
-  To: #{default_recipient}
-  Subject: Test message
+          msgstr = <<-MESSAGE
+From: #{default_sender}
+To: #{default_recipient}
+Subject: Test message
 
-  This is a test message sent with the new #{Rails.env} configuration for #{default_hostname}.
-  This message was sent at #{Time.zone.now}.
+This is a test message sent with the new #{Rails.env} configuration for #{default_hostname}.
+This message was sent at #{Time.zone.now}.
           MESSAGE
+          client.send_message(msgstr, default_sender, default_recipient)
         ensure
           client.finish rescue nil
         end

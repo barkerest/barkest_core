@@ -141,25 +141,7 @@ class SystemUpdateController < ApplicationController
   #
   def index
     app_gem_name = Rails.application.class.parent_name.underscore
-    gem = Gem::Specification.find{|g| g.name == app_gem_name}
-    @additional = []
-    if gem
-      @additional << [ gem.name, gem.version.to_s ]
-    end
-
-    %w(rails).each do |gem_name|
-      gem = Gem::Specification.find{|g| g.name == gem_name}
-      if gem
-        @additional << [ gem.name, gem.version.to_s ]
-      end
-    end
-
-    Gem::Specification.to_a.sort{|a,b| a.name <=> b.name}.each do |gem|
-      if gem.name.include?('barkest')
-        @additional << [ gem.name, gem.version.to_s ]
-      end
-    end
-
+    @additional = BarkestCore.gem_list(app_gem_name, 'rails', 'barkest*')
   end
 
   private

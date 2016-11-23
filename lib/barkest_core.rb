@@ -166,6 +166,37 @@ module BarkestCore
     request_time > start_time
   end
 
+  def self.gem_list(*pattern)
+    ret = []
+
+    Gem::Specification.to_a.sort{|a,b| a.name <=> b.name}.each do |gem|
+      pattern.each do |pat|
+        if pattern[0] == '*' && pattern[-1] == '*'
+          pat = pat[1...-1]
+          if gem.name.include?(pat)
+            ret << [ gem.name, gem.version.to_s ]
+          end
+        elsif pattern[0] == '*'
+          pat = pat[1..-1]
+          if gem.name[-(pat.length)..-1] == pat
+            ret << [ gem.name, gem.version.to_s ]
+          end
+        elsif pattern[-1] == '*'
+          pat = pat[0...-1]
+          if gem.name[0..(pat.length)] == pat
+            ret << [ gem.name, gem.version.to_s ]
+          end
+        else
+          if gem.name == pat
+            ret << [ gem.name, gem.version.to_s ]
+          end
+        end
+      end
+    end
+
+    ret
+  end
+
 
   private
 

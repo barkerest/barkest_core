@@ -23,7 +23,7 @@ module BarkestCore
       @default_recipient ||= BarkestCore.email_config[:default_recipient]
     end
 
-    default from: ApplicationMailerBase.default_sender
+    default from: ApplicationMailerBase.default_sender, to: ApplicationMailerBase.default_recipient
     layout 'mailer'
 
   end

@@ -10,7 +10,7 @@ class ContactController < ApplicationController
       @msg.remote_ip = request.remote_ip
       @msg.send_message
       flash[:success] = 'Your message has been sent.'
-      redirect_to contact_url
+      redirect_to root_url
     else
       render 'index'
     end

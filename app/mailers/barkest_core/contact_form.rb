@@ -8,8 +8,12 @@ class BarkestCore::ContactForm < ::BarkestCore::ApplicationMailerBase
   #   en.barkest_core.contact_form.contact.subject
   #
   def contact(msg)
-    @data = { msg: msg, client_ip: msg.remote_ip }
-    mail to: self.class.default_recipient, subject: msg.full_subject, reply_to: msg.your_email
+    @data = {
+        msg: msg,
+        client_ip: msg.remote_ip,
+        gems: BarkestCore.gem_list(Rails.application.class.parent_name.underscore, 'rails', 'barkest*'),
+    }
+    mail subject: msg.full_subject #, reply_to: msg.your_email
   end
 
 end
