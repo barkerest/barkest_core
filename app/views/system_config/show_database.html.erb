@@ -1,0 +1,27 @@
+<% provide :title, "Configure #{@db_id.humanize.titlecase} Database" %>
+
+<%= error_summary(@db_config) %>
+<div class="col-md-6 col-md-offset-3">
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h4 class="panel-title">Configure <%= @db_id.humanize.titlecase %> Database</h4>
+    </div>
+    <div class="panel-body">
+      <%= form_for @db_config, url: system_config_database_url(@db_id), method: :post do |f| %>
+          <%= f.select_form_group :adapter, BarkestCore::DatabaseConfig::VALID_ADAPTERS, :to_s, :to_s %>
+          <%= f.text_form_group :database %>
+          <%= f.text_form_group :pool %>
+          <%= f.text_form_group :timeout %>
+          <div class="form-group"><label><%= f.check_box :reconnect %> Automatically reconnect?</label></div>
+          <%= f.text_form_group :encoding %>
+          <%= f.text_form_group :host %>
+          <%= f.text_form_group :port %>
+          <%= f.text_form_group :username %>
+          <%= f.text_form_group :password, field_type: :password %>
+          <br>
+          <%= f.submit 'Save Configuration', class: 'btn btn-success' %>
+          <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
+      <% end %>
+    </div>
+  </div>
+</div>
