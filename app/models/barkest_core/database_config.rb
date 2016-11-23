@@ -6,7 +6,7 @@ module BarkestCore
     attr_accessor :name, :adapter, :encoding, :reconnect, :database, :pool, :username, :password, :timeout, :host, :port
     attr_accessor :extra_1_name, :extra_1_type, :extra_1_value, :extra_2_name, :extra_2_type, :extra_2_value
 
-    VALID_ADAPTERS = %w(sqlite3 mysql postgresql sqlserver)
+    VALID_ADAPTERS = %w(sqlite3 mysql2 postgresql sqlserver)
 
     validates :adapter, inclusion: { in: VALID_ADAPTERS }
     validates :name, presence: true, length: { maximum: 128 }

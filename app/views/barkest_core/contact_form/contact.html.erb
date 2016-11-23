@@ -1,0 +1,7 @@
+<pre>
+From: <%= @data[:msg].your_name %>&lt;<%= @data[:msg].your_email %>&gt;
+IP Address: <%= @data[:msg].remote_ip %>
+Date/time: <%= Time.zone.now %>
+
+<%= @data[:msg].body %>
+</pre>

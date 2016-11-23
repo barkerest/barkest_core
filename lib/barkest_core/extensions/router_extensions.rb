@@ -35,6 +35,10 @@ ActionDispatch::Routing::Mapper.class_eval do
         end
       end
 
+      # contact form
+      get       'contact'                 => 'contact#index'
+      post      'contact'                 => 'contact#create'
+
       # login/logout
       get       'login'                   => 'sessions#new',      as: :login
       post      'login'                   => 'sessions#create'
@@ -81,7 +85,6 @@ ActionDispatch::Routing::Mapper.class_eval do
       post      'system_config/email'         => 'system_config#update_email'
       get       'system_config/database/:id'  => 'system_config#show_database',   as: :system_config_database
       post      'system_config/database/:id'  => 'system_config#update_database'
-
 
     end
   end
