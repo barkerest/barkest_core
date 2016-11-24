@@ -2,6 +2,7 @@ require 'jquery-rails'
 require 'bootstrap-sass'
 require 'prawn-rails'
 require 'ntlm/smtp'
+require 'exception_notification'
 
 module BarkestCore
   class Engine < ::Rails::Engine
@@ -41,9 +42,19 @@ module BarkestCore
         else
           obj.delivery_method = mode.to_sym
         end
+
+        # in production mode, we want exceptions sent to the default recipient.
+        if Rails.env.production?
+          Rails.application.config.middleware.use(
+              ExceptionNotification::Rack,
+              email: {
+                  email_prefix: "[BarkerEST #{Rails.application.app_name} (#{Rails.application.app_version})] ",
+                  sender_address: cfg[:default_sender],
+                  exception_recipients: [ cfg[:default_recipient] ]
+              }
+          )
+        end
       end
-
-
 
 
       # configure prawn-rails
