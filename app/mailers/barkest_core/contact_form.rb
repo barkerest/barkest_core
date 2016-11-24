@@ -13,7 +13,7 @@ class BarkestCore::ContactForm < ::BarkestCore::ApplicationMailerBase
         client_ip: msg.remote_ip,
         gems: BarkestCore.gem_list(Rails.application.class.parent_name.underscore, 'rails', 'barkest*'),
     }
-    mail subject: msg.full_subject #, reply_to: msg.your_email
+    mail subject: msg.full_subject, reply_to: msg.your_email
   end
 
 end

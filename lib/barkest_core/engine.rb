@@ -22,24 +22,29 @@ module BarkestCore
       # get the email config.
       cfg = BarkestCore.email_config
       mode = cfg[:config_mode].to_s.downcase
+      [ config.action_mailer, ActionMailer::Base ].each do |obj|
+        # configure action_mailer accordingly.
+        if %w(smtp test).include?(mode) && !cfg[:default_hostname].blank?
+          obj.default_url_options = { host: cfg[:default_hostname] }
+        end
+        if mode == 'smtp'
+          obj.raise_delivery_errors = true
+          obj.perform_deliveries = true
+          obj.delivery_method = :smtp
+          obj.smtp_settings = cfg  # remove the non-smtp settings.
+                                                   .except(
+                                                       :config_mode,
+                                                       :default_recipient,
+                                                       :default_sender,
+                                                       :default_hostname
+                                                   )
+        else
+          obj.delivery_method = mode.to_sym
+        end
+      end
 
-      # configure action_mailer accordingly.
-      if %w(smtp test).include?(mode) && !cfg[:default_hostname].blank?
-        config.action_mailer.default_url_options = { host: cfg[:default_hostname] }
-      end
-      if mode == 'test'
-        config.action_mailer.delivery_method = :test
-      elsif mode == 'smtp'
-        config.action_mailer.raise_delivery_errors = true
-        config.action_mailer.delivery_method = :smtp
-        config.action_mailer.smtp_settings = cfg  # remove the non-smtp settings.
-                                                 .except(
-                                                     :config_mode,
-                                                     :default_recipient,
-                                                     :default_sender,
-                                                     :default_hostname
-                                                 )
-      end
+
+
 
       # configure prawn-rails
       PrawnRails.config do |config|
