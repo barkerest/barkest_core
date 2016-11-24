@@ -76,8 +76,18 @@ module BarkestCore
   ##
   # Sets the defaults for a database configuration.
   def self.register_db_config_defaults(db_name, defaults)
+    # reset the config cache.
+    @db_configs = nil
+
+    db_name = db_name.to_s
+    return false if db_name.blank?
+    return false if db_name == 'barkest_core'
+
+    # set the defaults.
     @db_config_defaults ||= {}
     @db_config_defaults[db_name.to_sym] = defaults
+
+    true
   end
 
   ##
@@ -199,7 +209,7 @@ module BarkestCore
     unless pattern.blank?
       key_gem_patterns << pattern unless key_gem_patterns.include?(pattern)
     end
-    nil
+    key_gem_patterns.include? pattern
   end
 
   private

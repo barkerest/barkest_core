@@ -49,6 +49,8 @@ module BarkestCore
     end
 
     def smtp_validate
+      return nil if Rails.env.test?
+
       # no need to test unless we are configured for SMTP.
       return nil unless smtp?
 
@@ -106,7 +108,6 @@ This message was sent at #{Time.zone.now}.
     def EmailConfig.load
       EmailConfig.new SystemConfig.get(:email)
     end
-
 
   end
 end
