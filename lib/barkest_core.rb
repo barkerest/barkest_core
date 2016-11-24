@@ -81,33 +81,26 @@ module BarkestCore
   end
 
   ##
-  # Provides the defaults to be returned by db_config when settings are missing.
-  def self.db_config_defaults(db_name)
-    @db_config_defaults ||= {}
-    @db_config_defaults[db_name.to_sym] || {}
-  end
-
-  ##
   # Gets the email configuration for the application.
   #
   # Email settings are stored under the :email key within SystemConfig.
   #
   # Returned keys will be symbols.
   def self.email_config
-    @email_config ||= email_config_defaults.symbolize_keys.merge( (SystemConfig.get(:email) || {}).symbolize_keys )
+    @email_config ||= email_config_defaults(nil).merge( (SystemConfig.get(:email) || {}).symbolize_keys )
   end
 
   ##
   # Provides the defaults to be returned by email_config when settings are missing.
-  #
-  # Can be overriden by child projects to provide appropriate defaults.
-  def self.email_config_defaults
-    {
-        config_mode: :none,
-        default_sender: 'support@barkerest.com',
-        default_recipient: 'support@barkerest.com',
-        default_hostname: 'localhost',
-    }
+  def self.email_config_defaults(new_defaults = {})
+    @email_config_defaults = nil if new_defaults
+    @email_config_defaults ||=
+        {
+            config_mode: :none,
+            default_sender: 'support@barkerest.com',
+            default_recipient: 'support@barkerest.com',
+            default_hostname: 'localhost',
+        }.merge((new_defaults || {}).symbolize_keys)
   end
 
   ##
@@ -126,7 +119,7 @@ module BarkestCore
   def self.auth_config
     @auth_config ||=
         begin
-          cfg = auth_config_defaults.symbolize_keys.merge( (SystemConfig.get(:auth) || {}).symbolize_keys )
+          cfg = auth_config_defaults(nil).symbolize_keys.merge( (SystemConfig.get(:auth) || {}).symbolize_keys )
 
           cfg[:enable_db_auth] = true unless cfg[:enable_ldap_auth]
 
@@ -136,13 +129,13 @@ module BarkestCore
 
   ##
   # Provides the defaults to be provided by auth_config when settings are missing.
-  #
-  # Can be overriden by child projects to provide appropriate defaults.
-  def self.auth_config_defaults
-    {
-        enable_db_auth: true,
-        enable_ldap_auth: false,
-    }
+  def self.auth_config_defaults(new_defaults = {})
+    @auth_config_defaults = nil if new_defaults
+    @auth_config_defaults ||=
+        {
+            enable_db_auth: true,
+            enable_ldap_auth: false,
+        }.merge((new_defaults || {}).symbolize_keys)
   end
 
   # :nodoc:
@@ -166,30 +159,32 @@ module BarkestCore
     request_time > start_time
   end
 
-  def self.gem_list(*pattern)
+  ##
+  # Gets a list of key gems with their versions.
+  #
+  # This is useful for informational displays such as brief application version diplays.
+  #
+  # Supply one or more patterns for gem names.  If you supply none, then the default
+  # pattern list is used.
+  def self.gem_list(*patterns)
     ret = []
 
+    if patterns.blank?
+      patterns = key_gem_patterns
+    elsif patterns.first.is_a?(TrueClass)
+      patterns = key_gem_patterns + patterns[1..-1]
+    elsif patterns.last.is_a?(TrueClass)
+      patterns = patterns[0...-1] + key_gem_patterns
+    end
+
+    patterns = patterns.flatten.inject([]) { |memo,v| memo << v unless memo.include?(v); memo }
+
     Gem::Specification.to_a.sort{|a,b| a.name <=> b.name}.each do |gem|
-      pattern.each do |pat|
-        if pattern[0] == '*' && pattern[-1] == '*'
-          pat = pat[1...-1]
-          if gem.name.include?(pat)
-            ret << [ gem.name, gem.version.to_s ]
-          end
-        elsif pattern[0] == '*'
-          pat = pat[1..-1]
-          if gem.name[-(pat.length)..-1] == pat
-            ret << [ gem.name, gem.version.to_s ]
-          end
-        elsif pattern[-1] == '*'
-          pat = pat[0...-1]
-          if gem.name[0..(pat.length)] == pat
-            ret << [ gem.name, gem.version.to_s ]
-          end
-        else
-          if gem.name == pat
-            ret << [ gem.name, gem.version.to_s ]
-          end
+      patterns.each do |pat|
+        if pat.is_a?(String) && gem.name == pat
+          ret << [ gem.name, gem.version.to_s ]
+        elsif pat.is_a?(Regexp) && pat.match(gem.name)
+          ret << [ gem.name, gem.version.to_s ]
         end
       end
     end
@@ -197,8 +192,26 @@ module BarkestCore
     ret
   end
 
+  ##
+  # Adds a key gem pattern to the default gem_list results.
+  def self.add_key_gem_pattern(pattern)
+    pattern = pattern.to_s.downcase
+    unless pattern.blank?
+      key_gem_patterns << pattern unless key_gem_patterns.include?(pattern)
+    end
+    nil
+  end
 
   private
+
+  def self.key_gem_patterns
+    @key_gem_patterns ||= [ 'rails', /^barkest/ ]
+  end
+
+  def self.db_config_defaults(db_name)
+    @db_config_defaults ||= {}
+    @db_config_defaults[db_name.to_sym] || {}
+  end
 
   def self.avail_db_configs
     @avail_db_configs ||=

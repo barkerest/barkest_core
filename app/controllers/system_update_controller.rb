@@ -141,7 +141,7 @@ class SystemUpdateController < ApplicationController
   #
   def index
     app_gem_name = Rails.application.class.parent_name.underscore
-    @additional = BarkestCore.gem_list(app_gem_name, 'rails', 'barkest*')
+    @additional = BarkestCore.gem_list(app_gem_name, true)
   end
 
   private
