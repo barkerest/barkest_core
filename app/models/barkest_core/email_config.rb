@@ -1,4 +1,6 @@
 module BarkestCore
+  ##
+  # Defines the email configuration for the system.
   class EmailConfig
     include ActiveModel::Model
     include ActiveModel::Validations
@@ -22,6 +24,8 @@ module BarkestCore
 
     validate :smtp_validate, if: :smtp?
 
+    ##
+    # Initializes the configuration.
     def initialize(*args)
       args.each do |arg|
         if arg.is_a?(Hash)
@@ -36,17 +40,55 @@ module BarkestCore
       end
     end
 
+    ##
+    # Is SMTP enabled?
     def smtp?
       config_mode.to_s.downcase == 'smtp'
     end
 
+    ##
+    # Is SSL enabled for SMTP?
     def ssl?
       ssl.to_s.to_i != 0
     end
 
+    ##
+    # Is STARTTLS enabled for SMTP?
     def enable_starttls_auto?
       enable_starttls_auto.to_s.to_i != 0
     end
+
+    ##
+    # Converts this configuration into a hash.
+    def to_h
+      {
+          config_mode: config_mode.to_s.to_sym,
+          default_sender: default_sender.to_s,
+          default_recipient: default_recipient.to_s,
+          default_hostname: default_hostname.to_s,
+          address: address.to_s,
+          port: port.to_s.to_i,
+          authentication: authentication.to_s.to_sym,
+          ssl: ssl?,
+          enable_starttls_auto: enable_starttls_auto?,
+          user_name: user_name.to_s,
+          password: password.to_s,
+      }
+    end
+
+    ##
+    # Saves this configuration (encrypted) to SystemConfig.
+    def save
+      SystemConfig.set :email, to_h, true
+    end
+
+    ##
+    # Loads the configuration from SystemConfig.
+    def EmailConfig.load
+      EmailConfig.new SystemConfig.get(:email)
+    end
+
+    private
 
     def smtp_validate
       return nil if Rails.env.test?
@@ -85,29 +127,6 @@ This message was sent at #{Time.zone.now}.
       end
     end
 
-    def to_h
-      {
-          config_mode: config_mode.to_s.to_sym,
-          default_sender: default_sender.to_s,
-          default_recipient: default_recipient.to_s,
-          default_hostname: default_hostname.to_s,
-          address: address.to_s,
-          port: port.to_s.to_i,
-          authentication: authentication.to_s.to_sym,
-          ssl: ssl?,
-          enable_starttls_auto: enable_starttls_auto?,
-          user_name: user_name.to_s,
-          password: password.to_s,
-      }
-    end
-
-    def save
-      SystemConfig.set :email, to_h, true
-    end
-
-    def EmailConfig.load
-      EmailConfig.new SystemConfig.get(:email)
-    end
 
   end
 end

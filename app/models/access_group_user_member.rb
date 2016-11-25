@@ -1,3 +1,5 @@
+##
+# Defines a user that belongs to an access group.
 class AccessGroupUserMember < ::BarkestCore::DbTable
 
   belongs_to :group, class_name: 'AccessGroup'

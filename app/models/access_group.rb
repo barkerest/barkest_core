@@ -1,3 +1,8 @@
+##
+# Defines the authorization mechanism for the system.
+#
+# Access Groups can contain users and other access groups.  Any member gains access to
+# any resource that allows the parent access group.
 class AccessGroup < ::BarkestCore::DbTable
 
   include BarkestCore::NamedModel

@@ -307,6 +307,8 @@ class User < ::BarkestCore::DbTable
     end
   end
 
+  ##
+  # Gets a generic anonymous user.
   def self.anonymous
     @anonymous = nil if Rails.env.test?
     @anonymous ||=

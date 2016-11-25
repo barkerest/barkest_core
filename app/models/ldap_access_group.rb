@@ -1,3 +1,5 @@
+##
+# Defines an LDAP group that belongs to an Access Group.
 class LdapAccessGroup < ::BarkestCore::DbTable
 
   belongs_to :group, class_name: 'AccessGroup'

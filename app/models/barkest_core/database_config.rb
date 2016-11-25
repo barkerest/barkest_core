@@ -1,4 +1,12 @@
 module BarkestCore
+
+  ##
+  # Defines a database configuration for a database other than the core database.
+  #
+  # The core database must be configurared in +database.yml+ since it defines the SystemConfig.
+  #
+  # Other databases (say for a 3rd party database) can easily be defined using SystemConfig
+  # and this class.
   class DatabaseConfig
     include ActiveModel::Model
     include ActiveModel::Validations
@@ -14,6 +22,10 @@ module BarkestCore
     validates :pool, presence: true
     validates :timeout, presence: true
 
+    ##
+    # Initializes the configuration.
+    #
+    # Define the parameters as hash values.  A string without a key will be used to set the name.
     def initialize(*args)
       args.each do |arg|
         if arg.is_a?(String)
@@ -56,10 +68,14 @@ module BarkestCore
       end
     end
 
+    ##
+    # Is the database configured to reconnect?
     def reconnect?
       reconnect.to_s.to_i != 0
     end
 
+    ##
+    # Converts this configuration into a hash.
     def to_h
       ret = {
           adapter: adapter.to_s,
@@ -94,10 +110,14 @@ module BarkestCore
       ret
     end
 
+    ##
+    # Saves this configuration (encrypted) to SystemConfig.
     def save
       SystemConfig.set name, to_h, true
     end
 
+    ##
+    # Loads the configuration for the specified database from SystemConfig.
     def DatabaseConfig.load(name)
       DatabaseConfig.new(name, SystemConfig.get(name))
     end

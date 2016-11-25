@@ -1,4 +1,7 @@
 module BarkestCore
+
+  ##
+  # Defines the authentication configuration for the system.
   class AuthConfig
     include ActiveModel::Model
     include ActiveModel::Validations
@@ -19,6 +22,8 @@ module BarkestCore
       cfg.validates :ldap_system_admin_groups
     end
 
+    ##
+    # Creates the configuration.
     def initialize(*args)
       args.each do |arg|
         if arg.is_a?(Hash)
@@ -33,22 +38,32 @@ module BarkestCore
       end
     end
 
+    ##
+    # Is DB authentication enabled?
     def enable_db_auth?
       enable_db_auth.to_s.to_i != 0
     end
 
+    ##
+    # Is LDAP authentication enabled?
     def enable_ldap_auth?
       enable_ldap_auth.to_s.to_i != 0
     end
 
+    ##
+    # Is SSL enabled for LDAP authentication?
     def ldap_ssl?
       ldap_ssl.to_s.to_i != 0
     end
 
+    ##
+    # Is automatic activation enabled for LDAP authenticated users?
     def ldap_auto_activate?
       ldap_auto_activate.to_s.to_i != 0
     end
 
+    ##
+    # Converts the configuration to a hash.
     def to_h
       {
           enable_db_auth: enable_db_auth?,
@@ -64,10 +79,14 @@ module BarkestCore
       }
     end
 
+    ##
+    # Saves the configuration (encrypted) to the SystemConfig.
     def save
       SystemConfig.set :auth, to_h, true
     end
 
+    ##
+    # Loads the configuration from the SystemConfig.
     def AuthConfig.load
       AuthConfig.new(SystemConfig.get(:auth) || {})
     end

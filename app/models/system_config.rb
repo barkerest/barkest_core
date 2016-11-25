@@ -1,5 +1,13 @@
 require 'encrypted_strings'
 
+##
+# Defines a mechanism to store and retrieve configurations using the core database.
+#
+# The +get+ and +set+ methods allow values to be stored in an encrypted fashion as well.
+#
+# The encryption will use the +encrypted_config_key+ value or the +secret_key_base+ value from
+# +secrets.yml+.  Ideally, use +encrypted_config_key+ to allow +secret_key_base+ to change if
+# necessary.
 class SystemConfig < ::BarkestCore::DbTable
 
   validates :key,
@@ -9,11 +17,15 @@ class SystemConfig < ::BarkestCore::DbTable
 
   before_save :downcase_key
 
+  ##
+  # Sets the value storing it as a YAML string.
   def value=(new_value)
     val = new_value.nil? ? nil : new_value.to_yaml
     write_attribute :value, val
   end
 
+  ##
+  # Gets the value loading it from a YAML string.
   def value
     val = read_attribute(:value).to_s
     return nil if val.empty?

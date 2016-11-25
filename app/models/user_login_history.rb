@@ -1,3 +1,5 @@
+##
+# Defines the login history for a user.
 class UserLoginHistory < ::BarkestCore::DbTable
 
   belongs_to :user

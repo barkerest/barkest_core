@@ -1,3 +1,5 @@
+##
+# Defines an access group that belongs to another access group.
 class AccessGroupGroupMember < ::BarkestCore::DbTable
   belongs_to :group, class_name: 'AccessGroup'
   belongs_to :member, class_name: 'AccessGroup'
