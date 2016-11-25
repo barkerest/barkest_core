@@ -1,9 +1,16 @@
+##
+# This controller provides the basic contact form.
+#
 class ContactController < ApplicationController
 
+  ##
+  # GET /contact
   def index
     @msg = BarkestCore::ContactMessage.new
   end
 
+  ##
+  # POST /contact
   def create
     @msg = get_message
     if @msg.valid? && verify_recaptcha_challenge(@msg)

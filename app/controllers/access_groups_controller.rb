@@ -1,26 +1,34 @@
+##
+# This is the controller that allows managing the access groups used for authorizing access to resources.
+#
 class AccessGroupsController < ApplicationController
   before_action :validate_user
 
   before_action :set_access_group, only: [:show, :edit, :update, :destroy]
 
+  ##
   # GET /access_groups
   def index
     @access_groups = AccessGroup.all.sorted
   end
 
+  ##
   # GET /access_groups/1
   def show
   end
 
+  ##
   # GET /access_groups/new
   def new
     @access_group = AccessGroup.new
   end
 
+  ##
   # GET /access_groups/1/edit
   def edit
   end
 
+  ##
   # POST /access_groups
   def create
     @access_group = AccessGroup.new(access_group_params)
@@ -32,6 +40,7 @@ class AccessGroupsController < ApplicationController
     end
   end
 
+  ##
   # PATCH/PUT /access_groups/1
   def update
     if @access_group.update(access_group_params)
@@ -41,6 +50,7 @@ class AccessGroupsController < ApplicationController
     end
   end
 
+  ##
   # DELETE /access_groups/1
   def destroy
     @access_group.destroy

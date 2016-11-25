@@ -1,3 +1,5 @@
+##
+# Default application controller.  Easy to override in child apps.
 class ApplicationController < ::BarkestCore::ApplicationControllerBase
-  # default application controller, easy enough to override in parent apps.
+
 end

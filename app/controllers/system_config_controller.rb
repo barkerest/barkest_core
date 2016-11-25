@@ -1,21 +1,33 @@
+
+##
+# This controller makes it easy to edit the system configuration for email, authentication,
+# and additional database connections.
 class SystemConfigController < ApplicationController
 
   before_action :require_admin
   before_action :validate_db_id, only: [ :show_database, :update_database ]
 
+  ##
+  # GET /system_config
   def index
 
   end
 
+  ##
+  # POST /system_config/restart
   def restart
     BarkestCore.request_restart
     redirect_to system_config_url
   end
 
+  ##
+  # GET /system_config/auth
   def show_auth
     @auth_params = BarkestCore::AuthConfig.new(BarkestCore.auth_config)
   end
 
+  ##
+  # POST /system_config/auth
   def update_auth
     @auth_params = get_auth_params
 
@@ -32,10 +44,14 @@ class SystemConfigController < ApplicationController
     end
   end
 
+  ##
+  # GET /system_config/email
   def show_email
     @email_config = BarkestCore::EmailConfig.new(BarkestCore.email_config)
   end
 
+  ##
+  # POST /system_config/email
   def update_email
     @email_config = get_email_params
 
@@ -52,11 +68,14 @@ class SystemConfigController < ApplicationController
     end
   end
 
-
+  ##
+  # GET /system_config/database/db_name
   def show_database
     @db_config = BarkestCore::DatabaseConfig.new(@db_id, BarkestCore.db_config(@db_id))
   end
 
+  ##
+  # POST /system_config/database/db_name
   def update_database
     @db_config = get_db_params
 
