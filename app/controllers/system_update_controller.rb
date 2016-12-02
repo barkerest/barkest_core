@@ -77,6 +77,9 @@ class SystemUpdateController < ApplicationController
                       send(:before_file_update, shell) if respond_to?(:before_file_update)
                       log_header 'Updating app files'
                       shell.exec('git pull origin master',                      &rtlog)
+                      # Ensure bin files are executable.
+                      # Files stored by git from WSL don't seem to always get the exec bit stored.
+                      shell.exec('chmod +x bin/*',                              &rtlog)
 
                       send(:before_bundle, shell) if respond_to?(:before_bundle)
                       log_header 'Bundling gems'

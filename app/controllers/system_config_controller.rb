@@ -93,6 +93,30 @@ class SystemConfigController < ApplicationController
   end
 
 
+  ##
+  # GET /system_config/self_update
+  def show_self_update
+    @config = BarkestCore::SelfUpdateConfig.load
+  end
+
+  ##
+  # POST /system_config/self_update
+  def update_self_update
+    @config = get_self_update_params
+
+    if @config.valid?
+      if @config.save
+        flash[:success] = 'The configuration has been saved.'
+        redirect_to system_config_url
+      else
+        flash[:danger] = 'Failed to save the configuration.'
+        render 'show_self_update'
+      end
+    else
+      render 'show_self_update'
+    end
+  end
+
   private
 
   def require_admin
@@ -120,6 +144,10 @@ class SystemConfigController < ApplicationController
         :encoding, :database, :extra_1_name, :extra_1_type, :extra_1_value, :extra_2_name,
         :extra_2_type, :extra_2_value,
     ))
+  end
+
+  def get_self_update_params
+    BarkestCore::SelfUpdateConfig.new(params.require(:barkest_core_self_update_config).permit(:host, :port, :user, :password))
   end
 
   def validate_db_id

@@ -1,28 +1,21 @@
 <% provide :title, 'Configure Email' %>
 
 <%= error_summary(@email_config) %>
-<div class="col-md-6 col-md-offset-3">
-  <div class="panel panel-primary">
-    <div class="panel-heading">
-      <h4 class="panel-title">Configure Email</h4>
-    </div>
-    <div class="panel-body">
-      <%= form_for @email_config, url: system_config_email_url, method: :post do |f| %>
-          <%= f.select_form_group :config_mode, BarkestCore::EmailConfig::VALID_CONFIG_MODES, :to_s, :to_s %>
-          <%= f.text_form_group :default_sender %>
-          <%= f.text_form_group :default_recipient %>
-          <%= f.text_form_group :default_hostname %>
-          <%= f.text_form_group :address, label_text: 'SMTP Address' %>
-          <%= f.text_form_group :port, label_text: 'SMTP Port' %>
-          <%= f.select_form_group :authentication, BarkestCore::EmailConfig::VALID_AUTH_MODES, :to_s, :to_s, label_text: 'SMTP Authentication' %>
-          <div class="form-group"><label><%= f.check_box :ssl %> Use SSL for SMTP connection?</label></div>
-          <div class="form-group"><label><%= f.check_box :enable_starttls_auto %> Use STARTTLS for SMTP connection?</label></div>
-          <%= f.text_form_group :user_name, label_text: 'SMTP User' %>
-          <%= f.text_form_group :password, field_type: :password, label_text: 'SMTP Password' %>
-          <br>
-          <%= f.submit "Save Configuration", class: 'btn btn-success' %>
-          <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
-      <% end %>
-    </div>
-  </div>
-</div>
+<%= panel 'Configure Email' do %>
+    <%= form_for @email_config, url: system_config_email_url, method: :post do |f| %>
+        <%= f.select_form_group :config_mode, BarkestCore::EmailConfig::VALID_CONFIG_MODES, :to_s, :to_s %>
+        <%= f.text_form_group :default_sender %>
+        <%= f.text_form_group :default_recipient %>
+        <%= f.text_form_group :default_hostname %>
+        <%= f.text_form_group :address, label_text: 'SMTP Address' %>
+        <%= f.text_form_group :port, label_text: 'SMTP Port' %>
+        <%= f.select_form_group :authentication, BarkestCore::EmailConfig::VALID_AUTH_MODES, :to_s, :to_s, label_text: 'SMTP Authentication' %>
+        <div class="form-group"><label><%= f.check_box :ssl %> Use SSL for SMTP connection?</label></div>
+        <div class="form-group"><label><%= f.check_box :enable_starttls_auto %> Use STARTTLS for SMTP connection?</label></div>
+        <%= f.text_form_group :user_name, label_text: 'SMTP User' %>
+        <%= f.text_form_group :password, field_type: :password, label_text: 'SMTP Password' %>
+        <br>
+        <%= f.submit "Save Configuration", class: 'btn btn-success' %>
+        <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
+    <% end %>
+<% end %>

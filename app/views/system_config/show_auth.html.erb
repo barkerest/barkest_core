@@ -1,35 +1,28 @@
 <% provide :title, 'Configure Authentication' %>
 
 <%= error_summary(@auth_params) %>
-<div class="col-md-6 col-md-offset-3">
-  <div class="panel panel-primary">
-    <div class="panel-heading">
-      <h4 class="panel-title">Configure Authentication</h4>
-    </div>
-    <div class="panel-body">
-      <%= form_for @auth_params, url: system_config_auth_url, method: :post do |f| %>
-          <div class="form-group">
-            <label><%= f.check_box :enable_db_auth %> Enable DB Authentication?</label>
-          </div>
-          <div class="form-group">
-            <label><%= f.check_box :enable_ldap_auth %> Enable LDAP Authentication?</label>
-          </div>
-          <%= f.text_form_group :ldap_host %>
-          <%= f.text_form_group :ldap_port %>
-          <div class="form-group">
-            <label><%= f.check_box :ldap_ssl %> Use SSL for LDAP?</label>
-          </div>
-          <%= f.text_form_group :ldap_browse_user %>
-          <%= f.text_form_group :ldap_browse_password, field_type: :password %>
-          <%= f.text_form_group :ldap_base_dn %>
-          <div class="form-group">
-            <label><%= f.check_box :ldap_auto_activate %> Automatically activate new users from LDAP?</label>
-          </div>
-          <%= f.textarea_form_group :ldap_system_admin_groups %>
-          <br>
-          <%= f.submit "Save Configuration", class: 'btn btn-success' %>
-          <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
-      <% end %>
-    </div>
-  </div>
-</div>
+<%= panel 'Configure Authentication' do %>
+    <%= form_for @auth_params, url: system_config_auth_url, method: :post do |f| %>
+        <div class="form-group">
+          <label><%= f.check_box :enable_db_auth %> Enable DB Authentication?</label>
+        </div>
+        <div class="form-group">
+          <label><%= f.check_box :enable_ldap_auth %> Enable LDAP Authentication?</label>
+        </div>
+        <%= f.text_form_group :ldap_host %>
+        <%= f.text_form_group :ldap_port %>
+        <div class="form-group">
+          <label><%= f.check_box :ldap_ssl %> Use SSL for LDAP?</label>
+        </div>
+        <%= f.text_form_group :ldap_browse_user %>
+        <%= f.text_form_group :ldap_browse_password, field_type: :password %>
+        <%= f.text_form_group :ldap_base_dn %>
+        <div class="form-group">
+          <label><%= f.check_box :ldap_auto_activate %> Automatically activate new users from LDAP?</label>
+        </div>
+        <%= f.textarea_form_group :ldap_system_admin_groups %>
+        <br>
+        <%= f.submit "Save Configuration", class: 'btn btn-success' %>
+        <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
+    <% end %>
+<% end %>

@@ -123,7 +123,7 @@ module BarkestCore
 
       fld = []
 
-      remaining_width = 100
+      remaining_width = 100.0
       width = (100.0 / methods.count).round(2)
 
       builder = Proc.new do |method,label|

@@ -1,0 +1,13 @@
+<% provide :title, 'Self Update Settings' %>
+
+<%= error_summary(@config) %>
+<%= panel 'Self Update Settings' do %>
+    <%= form_for @config, url: system_config_self_update_url, method: :post do |f| %>
+        <%= f.multi_input_form_group [ :host, :port ], label_text: 'Host/port' %>
+        <%= f.text_form_group :user %>
+        <%= f.text_form_group :password, field_type: :password %>
+        <br>
+        <%= f.submit 'Save', class: 'btn btn-success' %>
+        <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>
+    <% end %>
+<% end %>
