@@ -1,11 +1,11 @@
 <div class="container">
- <footer>
-  <small>Copyright &copy; 2016 <a href="https://www.barkerest.com/" title="BarkerEST">BarkerEST</a></small>
-  <nav>
-   <ul>
-    <li><%= link_to 'Contact', contact_path %></li>
-   </ul>
-  </nav>
- </footer>
- <%= debug(params) if Rails.env.development? %>
+  <footer>
+    <%= render 'layouts/footer_copyright' %>
+    <nav>
+      <ul>
+        <%= render 'layouts/menu_footer' %>
+      </ul>
+    </nav>
+  </footer>
+  <%= debug(params) if Rails.env.development? %>
 </div>

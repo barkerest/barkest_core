@@ -8,16 +8,16 @@
   </script>
   <%= javascript_include_tag 'application' %>
   <%= csrf_meta_tags %>
- <%= render 'layouts/barkest_core/shim' %>
+  <%= render 'layouts/barkest_core/shim' %>
 </head>
 <body>
- <%= render 'layouts/barkest_core/header' %>
- <div class="container body-content">
+<%= render 'layouts/barkest_core/header' %>
+<div class="container body-content">
   <%= render 'layouts/barkest_core/messages' %>
   <%= yield %>
- </div>
- <%= render 'layouts/barkest_core/footer' %>
- <!-- <%= Rails.application.app_info %>  -->
+</div>
+<%= render 'layouts/barkest_core/footer' %>
+<!-- <%= Rails.application.app_info %>  -->
 <% console if Rails.env.development? %>
 </body>
 </html>

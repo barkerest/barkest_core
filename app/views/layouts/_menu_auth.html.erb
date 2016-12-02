@@ -1,0 +1,3 @@
+<% if system_admin? || BarkestCore.lock_down_users == false %>
+    <li><%= link_to 'Users', users_path %></li>
+<% end %>

@@ -50,6 +50,28 @@ may be some issues.  To truly take advantage of BarkestCore, you should have you
 as the `authorize!` method inside your controllers.  The layouts are less important, BarkestCore provides some generic
 layouts as default, but you can easily use your own layouts.
 
+---
+There are a few special layouts you can create to modify parts of the layout easily.  Create these files in your
+__views/layouts__ folder to have them get used automatically.  Use the _ prefixed notation.   
+ie: "_nav_logo.html.erb" for "nav_logo"
+
+*   __nav_logo__ Defines the logo in the top left corner of the webpage.  This should be an image tag inside of
+    a link tag.    
+    ie: `<a href="..."><img src="..."></a>`
+*   __footer_copyright__ Defines the copyright text presented in the footer.  This can be anything you want 
+    it to be.
+*   __menu_admin__ Defines the administration menu.  You probably won't need to do anything with this 
+    particular menu, but just in case, it is one of the easily overridable views.  
+    Menus would be `<li>...</li>` items.  The container `<ul>...</ul>` is defined in the parent view.
+*   __menu_anon__ Defines the menu available to all users, aka: the anonymous menu.  If you want to
+    provide menu options to everyone, you would want to place them here.  
+    Menus would be `<li>...</li>` items.  The container `<ul>...</ul>` is defined in the parent view.
+*   __menu_auth__ Defines the menu available to authenticated users.  The default is just a link to the
+    users list.  Your app may not even desire that link.  This is the view that is most likely to be 
+    adjusted on a per-project basis since it defines the menu for users.  
+    Menus would be `<li>...</li>` items.  The container `<ul>...</ul>` is defined in the parent view.
+   
+---
 Utility models are namespaced.  These include the `UserManager` (which you shouldn't need to use directly), `WorkPath`,
 `GlobalStatus`, and `PdfTableBuilder` classes, among others.
 
@@ -72,7 +94,35 @@ BarkestCore::GlobalStatus.lock_for do
 end
 ```
 
+---
+A `SystemConfig` (not namespaced) class exists that can be used to store configuration data for various
+services.  For instance, by default the LDAP and email configurations are stored within `SystemConfig`.
 
+This is handled by the `system_config` controller since the `SystemConfig` class doesn't care what is 
+getting stored.  It does however offer the lovely capability to encrypt the stored configuration.
+
+```ruby
+my_config = {
+  :some_int => 1234,
+  :some_string => 'hello world',
+  :some_bool => true
+}
+
+# Save the hash to the database in plain text.
+SystemConfig.set :some_config, my_config
+
+# Save the hash to the database in encrypted format.
+SystemConfig.set :some_config, my_config, true
+
+# Read the hash from the database (decrypted automatically if needed).
+my_config = SystemConfig.get(:some_config)
+```
+
+The encryption key used by `SystemConfig` comes from the __secrets.yml__ configuration file. If the
+`encrypted_config_key` is specified, that value will be used, otherwise the `secret_key_base` value
+will be used.  If the value for the encryption key is changed, any stored encrypted configurations 
+will be lost.  The `SystemConfig` class will return __nil__ if the value does not exist or cannot be 
+decrypted.
 
 
 ## Contributing
