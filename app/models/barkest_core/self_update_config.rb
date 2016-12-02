@@ -12,10 +12,16 @@ module BarkestCore
     def to_h
       {
           host: host.to_s,
-          port: port.to_s.to_i,
+          port: port,
           user: user.to_s,
           password: password.to_s,
       }
+    end
+
+    def port
+      return 22 if @port.nil?
+      val = @port.to_s.to_i
+      (1...65536).include?(val) ? val : 22
     end
 
     def save

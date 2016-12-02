@@ -22,9 +22,7 @@ class SystemUpdateController < ApplicationController
   # Perform a system update.
   #
   def new
-    host = Rails.application.secrets[:update_host]
-    user = Rails.application.secrets[:update_user]
-    pwd = Rails.application.secrets[:update_password]
+    cfg = BarkestCore::SelfUpdateConfig.load
     @file_path = Rails.root.to_s
     @app_root_url = root_path
     @bundle_path = @file_path + '/bin/bundle'
@@ -44,9 +42,10 @@ class SystemUpdateController < ApplicationController
 
                 begin
                   BarkestSsh::SecureShell.new(
-                      host: host,
-                      user: user,
-                      password: pwd
+                      host: cfg.host,
+                      user: cfg.user,
+                      password: cfg.password,
+                      port: cfg.port
                   ) do |shell|
 
                     log_data "Session has been created.\n"
