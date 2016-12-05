@@ -21,14 +21,4 @@ class AccessTest < ActionDispatch::IntegrationTest
                    deny_groups: ['group 1', 'group 2', 'group 3' ]
 
 
-  # group management paths.
-  access_tests_for [:index, :new, :create, :show, :edit, :update, :destroy],
-                   controller: 'access_groups',
-                   create_params: { access_group: { name: 'Test Group X'} },
-                   update_params: { access_group: { name: 'Test Group X'} }
-
-
-
-
-
 end
