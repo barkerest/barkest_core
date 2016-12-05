@@ -5,6 +5,7 @@
 #
 class UsersController < ApplicationController
 
+  before_action :not_logged_in,   only: [ :new, :create ]
   before_action :logged_in_user,  except: [:new, :create]
   before_action :load_user,       except: [:index, :new, :create]
   before_action :correct_user,    only: [:edit, :update]
@@ -162,6 +163,13 @@ class UsersController < ApplicationController
 
   def disable_user_params
     params.require(:disable_user).permit(:reason)
+  end
+
+  def not_logged_in
+    if logged_in?
+      flash[:danger] = 'You are already logged in.'
+      redirect_to root_url
+    end
   end
 
   def logged_in_user

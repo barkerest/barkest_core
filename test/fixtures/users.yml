@@ -7,6 +7,14 @@ admin:
   activated: true
   activated_at: <%= Time.zone.now %>
 
+one:
+  name: Number One
+  email: num.one@example.com
+  system_admin: false
+  password_digest: <%= User.digest('password') %>
+  activated: true
+  activated_at: <%= Time.zone.now %>
+
 standard:
   name: John Doe
   email: jdoe@example.com
