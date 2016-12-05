@@ -11,6 +11,11 @@ class ContactTest < ActionDispatch::IntegrationTest
     }
   end
 
+  access_tests_for :index,
+                   url_helper: 'contact_path',
+                   allow_anon: true,
+                   allow_any_user: true
+
   test 'valid contact message' do
     get contact_path
     assert_template 'contact/index'

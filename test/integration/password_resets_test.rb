@@ -7,6 +7,17 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     @user = users(:standard)
   end
 
+  access_tests_for :new,
+                   allow_anon: true,
+                   allow_admin: false
+
+  # nobody should be able to access this path, in the actual integration test it should work.
+  access_tests_for :edit,
+                   url_helper: 'edit_password_reset_path(\'invalid-token\')',
+                   anon_failure: 'root_url',
+                   allow_anon: false,
+                   allow_admin: false
+
   test 'password resets' do
     get new_password_reset_path
     assert_template 'password_resets/new'

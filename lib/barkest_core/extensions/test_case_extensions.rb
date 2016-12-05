@@ -182,7 +182,8 @@ ActiveSupport::TestCase.class_eval do
   # * +allow_admin+ determines if system admins can access the action.  Default is true.
   # * +method+ determines the method to process the action with.  Default is 'get'.
   # * +success+ determines the result on success.  Defaults to :success for 'get' requests, otherwise the pluralized controller helper path.
-  # * +failure+ determines the result on failure.  Defaults to 'login_url' for anonymous, otherwise 'root_url' .
+  # * +failure+ determines the result on failure for non-anon tests.  Defaults to 'root_url'.
+  # * +anon_failure+ determines the result on failure for anon tests.  Defaults to 'login_url'.
   #
   def self.access_tests_for(action, options = {})
     options = {
@@ -191,12 +192,13 @@ ActiveSupport::TestCase.class_eval do
         allow_groups: nil,
         allow_admin: true,
         fixture_key: :one,
-        failure: 'root_url'
+        failure: 'root_url',
+        anon_failure: 'login_url'
     }.merge(options || {})
 
     if action.respond_to?(:each)
       action.each do |act|
-        access_tests_for(act, options)
+        access_tests_for(act, options.dup)
       end
       return
     end
@@ -258,7 +260,7 @@ ActiveSupport::TestCase.class_eval do
     url_helper = options[:url_helper]
 
     tests = [
-        [ 'anonymous', options[:allow_anon],      nil,      nil,    nil,    'login_url' ],
+        [ 'anonymous', options[:allow_anon],      nil,      nil,    nil,    options[:anon_failure] ],
         [ 'any user',  options[:allow_any_user],  :basic ],
         [ 'admin user', options[:allow_admin],    :admin ]
     ]

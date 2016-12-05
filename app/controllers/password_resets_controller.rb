@@ -2,6 +2,7 @@
 # This is a simple controller that processes user password reset requests.
 #
 class PasswordResetsController < ApplicationController
+  before_action :not_logged_in
   before_action :load_user, only: [:edit, :update]
   before_action :valid_user, only: [:edit, :update]
   before_action :check_expiration, only: [:edit, :update]
@@ -10,6 +11,7 @@ class PasswordResetsController < ApplicationController
   # Shows the form allowing the user to enter their email address and confirm their non-robot status.
   #
   def new
+
   end
 
   ##
@@ -92,6 +94,13 @@ class PasswordResetsController < ApplicationController
   end
 
   private
+
+  def not_logged_in
+    if logged_in?
+      flash[:danger] = 'A logged in user cannot request a password reset.'
+      redirect_to root_url
+    end
+  end
 
   def user_params
     params.require(:user).permit(:password, :password_confirmation)
