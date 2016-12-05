@@ -214,19 +214,32 @@ label.plain, div.plain-label label {
     ul {
       list-style: none;
       float: right;
+      padding: 0;
       li {
         float: left;
         margin-left: 5px;
       }
     }
-    p {
+    p, div {
       float: right;
       max-width: 50%;
     }
   }
-  li.disabled {
+  li.info {
+    background-color: $state-info-bg;
+    color: $state-info-text;
+  }
+  li.warning {
+    background-color: $state-warning-bg;
+    color: $state-warning-text;
+  }
+  li.danger {
     background-color: $state-danger-bg;
     color: $state-danger-text;
+  }
+  li.success {
+    background-color: $state-success-bg;
+    color: $state-success-text;
   }
 }
 

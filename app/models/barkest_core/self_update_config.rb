@@ -6,8 +6,8 @@ module BarkestCore
     attr_accessor :host, :port, :user, :password
 
     validates :host, presence: true
-    validates :port, presence: true
     validates :user, presence: true
+    validates :password, presence: true
 
     def to_h
       {

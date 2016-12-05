@@ -200,6 +200,31 @@ class User < ::BarkestCore::DbTable
   end
 
   ##
+  # Gets the last successful login for this user.
+  def last_successful_login
+    @last_successful_login ||= login_histories.where(successful: true).order(created_at: :desc).first
+  end
+
+  ##
+  # Gets the last failed login for this user.
+  def last_failed_login
+    @last_failed_login ||= login_histories.where.not(successful: true).order(created_at: :desc).first
+  end
+
+  ##
+  # Gets the failed logins for a user since the last successful login.
+  def failed_login_streak
+    @failed_login_streak ||=
+        begin
+          results = login_histories.where.not(successful: true)
+          if last_successful_login
+            results = results.where('created_at > ?', last_successful_login.created_at)
+          end
+          results.order(created_at: :desc)
+        end
+  end
+
+  ##
   # Sends the password reset email to the user.
   def send_password_reset_email(client_ip = '0.0.0.0')
     BarkestCore::UserMailer.password_reset(user: self, client_ip: client_ip).deliver_now

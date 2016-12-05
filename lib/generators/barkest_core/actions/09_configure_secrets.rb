@@ -8,10 +8,7 @@ BarkestCore::InstallGenerator.class_eval do
     attributes = [
         [ 'recaptcha_public_key', :ask_for_string ],
         [ 'recaptcha_private_key', :ask_for_string ],
-        [ 'update_host', :ask_for_string, nil, nil, 'localhost' ],
-        [ 'update_user', :ask_for_string ],
-        [ 'update_password', :ask_for_secret ],
-        [ 'secret_key_base',  :ask_for_secret_key_base ]
+        [ 'secret_key_base',  :ask_for_secret_key_base ],
     ]
 
     default = {}

@@ -1,21 +1,57 @@
-<li <%= 'class="disabled"'.html_safe unless user.enabled? %>>
- <% if current_user.system_admin? && !current_user?(user) %>
-   <ul>
+<%
+  display_class =
+      if current_user?(user)
+        'class="success"'
+      elsif user.enabled?
+        if user.failed_login_streak.count >= 10
+          'class="danger"'
+        elsif user.failed_login_streak.count >= 5
+          'class="warning"'
+        else
+          ''
+        end
+      else
+        'class="info"'
+      end.html_safe
+%>
+<li <%= display_class %>>
+  <% if current_user.system_admin? %>
+      <div style="width: 5em;">
+        <% if current_user?(user) %>
+            &nbsp;
+        <% else %>
+            <ul>
+              <% if user.enabled? %>
+                  <%= link_to glyph('remove'), disable_user_path(user), class: 'btn btn-danger btn-xs', title: 'Disable user' %>
+              <% else %>
+                  <%= link_to glyph('plus'), enable_user_path(user), class: 'btn btn-primary btn-xs', method: :patch, title: 'Enable user' %>
+                  <%= link_to glyph('trash'), user, method: :delete, class: 'btn btn-danger btn-xs', title: 'Delete user', data: { confirm: "Are you sure you want to permanently delete #{user.name}?" } %>
+              <% end %>
+            </ul>
+        <% end %>
+      </div>
+  <% end %>
+  <%= gravatar_for user, size: 50 %>
+  <%= link_to user.name, user %>
+  <p style="width: 35%;">
     <% if user.enabled? %>
-      <%= link_to glyph('remove'), disable_user_path(user), class: 'btn btn-danger btn-xs', title: 'Disable user' %>
+        <% if user.failed_login_streak.count > 1 %>
+            Failed Login Streak: <%= user.failed_login_streak.count %><br />
+            Most Recent Attempt: <%= user.last_failed_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
+        <% elsif user.failed_login_streak.count == 1 %>
+            Failed Login Attempt: <%= user.last_failed_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
+        <% end %>
+        <% if user.last_successful_login %>
+            Most Recent Login: <%= user.last_successful_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_successful_login.ip_address %>
+        <% else %>
+            Most Recent Login: Never
+        <% end %>
     <% else %>
-      <%= link_to glyph('plus'), enable_user_path(user), class: 'btn btn-primary btn-xs', method: :patch, title: 'Enable user' %>
-      <%= link_to glyph('trash'), user, method: :delete, class: 'btn btn-danger btn-xs', title: 'Delete user', data: { confirm: "Are you sure you want to permanently delete #{user.name}?" } %>
+        Disabled <%= user.disabled_at ? user.disabled_at.strftime('%m/%d/%Y') : 'some time in the past' %> by <%= user.disabled_by ? user.disabled_by.name : 'Unknown User' %>.<br />
+        <%= user.disabled_reason %>
     <% end %>
-   </ul>
- <% end %>
- <%= gravatar_for user, size: 50 %>
- <%= link_to user.name, user %>
- <% if user.enabled? %>
- <% else %>
-   <p>
-    Disabled <%= user.disabled_at ? user.disabled_at.strftime('%m/%d/%Y') : 'some time in the past' %> by <%= user.disabled_by ? user.disabled_by.name : 'Unknown User' %><br />
-    <%= user.disabled_reason %>
-   </p>
- <% end %>
+  </p>
+  <p style="width: 35%;">
+    <%= render 'users/user_details_for_list' %>
+  </p>
 </li>

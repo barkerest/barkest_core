@@ -5,9 +5,6 @@ require 'rubygems'
 ##
 # An automatic update controller.
 #
-# This controller utilizes the +update_host+, +update_user+, and +update_password+ values from
-# the +secrets.yml+ configuration file to perform an update of the application.
-#
 # This is performed via an SSH shell to the host to login as the configured user and then
 # performing the various steps necessary to update the app from GIT, update the database, and precompile
 # the assets.  When that is all finished, it notifies Passenger to reload the application.
@@ -23,21 +20,22 @@ class SystemUpdateController < ApplicationController
   #
   def new
     cfg = BarkestCore::SelfUpdateConfig.load
-    @file_path = Rails.root.to_s
-    @app_root_url = root_path
-    @bundle_path = @file_path + '/bin/bundle'
 
-    show_system_status(
-        main_status: 'Updating application',
-        url_on_completion: system_update_url
-    ) do |status|
-      if status
-        unless Rails.env.test?
-          begin
-            File.open(BarkestCore::WorkPath.system_status_file, 'wt') do |f|
-              @status_log = f
+    if cfg.valid?
 
-              if !host.blank? && !user.blank? && !pwd.blank?
+      @file_path = Rails.root.to_s
+      @app_root_url = root_path
+
+      show_system_status(
+          main_status: 'Updating application',
+          url_on_completion: system_update_url
+      ) do |status|
+        if status
+          unless Rails.env.test?
+            begin
+              File.open(BarkestCore::WorkPath.system_status_file, 'wt') do |f|
+                @status_log = f
+
                 log_header 'Creating session'
 
                 begin
@@ -51,7 +49,7 @@ class SystemUpdateController < ApplicationController
                     log_data "Session has been created.\n"
 
                     tmp_data = shell.exec('which ruby')
-                    log_data "[WARNING: Global ruby]\n" if tmp_data == '/usr/bin/ruby'
+                    log_data "[WARNING: Global ruby]\n" if tmp_data == '/usr/bin/ruby' || tmp_data == '/usr/local/bin/ruby'
                     log_data "Ruby Path: #{tmp_data}\n"
 
                     tmp_data = shell.exec('ruby -v')
@@ -82,34 +80,34 @@ class SystemUpdateController < ApplicationController
 
                       send(:before_bundle, shell) if respond_to?(:before_bundle)
                       log_header 'Bundling gems'
-                      shell.exec("\"#{@bundle_path}\" install --deployment",    &rtlog)
+                      shell.exec('bundle install --deployment',                 &rtlog)
 
                       send(:before_db_update, shell) if respond_to?(:before_db_update)
                       log_header 'Updating database'
                       %w(db:create db:migrate).each do |cmd|
-                        cmd = "\"#{@bundle_path}\" exec rake #{cmd} RAILS_ENV=production"
+                        cmd = "bundle exec rake #{cmd} RAILS_ENV=production"
                         shell.exec(cmd,                                         &rtlog)
                       end
 
                       send(:before_db_seed, shell) if respond_to?(:before_db_seed)
                       log_header 'Seeding database'
                       cmd = 'db:seed'
-                      cmd = "\"#{@bundle_path}\" exec rake #{cmd} RAILS_ENV=production"
+                      cmd = "bundle exec rake #{cmd} RAILS_ENV=production"
                       shell.exec(cmd,                                           &rtlog)
                       send(:after_db_seed, shell) if respond_to?(:after_db_seed)
 
                       log_header 'Generating assets'
-                      cmd = "\"#{@bundle_path}\" exec rake assets:precompile RAILS_ENV=production RAILS_GROUPS=assets RAILS_RELATIVE_URL_ROOT=\"#{@app_root_url}\""
+                      cmd = "bundle exec rake assets:precompile RAILS_ENV=production RAILS_GROUPS=assets RAILS_RELATIVE_URL_ROOT=\"#{@app_root_url}\""
                       shell.exec(cmd,                                           &rtlog)
                       send(:after_asset_gen, shell) if respond_to?(:after_asset_gen)
 
                       log_header 'Running automatic configuration'
-                      cmd = "\"#{@bundle_path}\" exec rails generate barkest:install --force"
+                      cmd = "bundle exec rails generate barkest:install --force"
                       shell.exec(cmd,                                           &rtlog)
                       send(:after_config, shell) if respond_to?(:after_config)
 
                       log_header 'Restarting app'
-                      cmd = "\"#{@bundle_path}\" exec passenger-config restart-app \"#{@file_path}\""
+                      cmd = "bundle exec passenger-config restart-app \"#{@file_path}\""
                       shell.exec(cmd,                                           &rtlog)
                       send(:after_update, shell) if respond_to?(:after_update)
 
@@ -126,16 +124,18 @@ class SystemUpdateController < ApplicationController
                 rescue => error
                   log_data "A really unexpected error has occurred.\n#{error}\nUpdate is aborting.\nManual application update may be required to restore functionality.\n"
                 end
-              else
-                log_data "Update configuration is missing from 'secrets.yml'.\nUpdate is aborting.\n"
               end
+            ensure
+              @status_log = nil
             end
-          ensure
-            @status_log = nil
           end
         end
       end
+    else
+      flash[:danger] = 'The "Self Update Settings" need to be configured before a system update can be performed.'
+      redirect_to system_config_self_update_url
     end
+
   end
 
   ##
