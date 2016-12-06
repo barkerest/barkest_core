@@ -15,6 +15,13 @@ one:
   activated: true
   activated_at: <%= Time.zone.now %>
 
+two:
+  name: Number Two
+  email: num.two@example.com
+  system_admin: false
+  password_digest: <%= User.digest('password') %>
+  activation_digest: <%= User.digest('valid-token') %>
+
 standard:
   name: John Doe
   email: jdoe@example.com

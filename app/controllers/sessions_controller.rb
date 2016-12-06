@@ -2,6 +2,8 @@
 # A simple controller providing the login and logout methods for the application.
 class SessionsController < ApplicationController
 
+  before_action :require_anon, only: [ :new, :create ]
+
   ##
   # Shows the login form.
   #
@@ -51,4 +53,12 @@ class SessionsController < ApplicationController
     redirect_to root_url
   end
 
+  private
+
+  def require_anon
+    if logged_in?
+      flash[:danger] = 'You are already logged in.'
+      redirect_to root_url
+    end
+  end
 end

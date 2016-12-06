@@ -186,6 +186,14 @@ ActiveSupport::TestCase.class_eval do
   # * +anon_failure+ determines the result on failure for anon tests.  Defaults to 'login_url'.
   #
   def self.access_tests_for(action, options = {})
+
+    if action.respond_to?(:each)
+      action.each do |act|
+        access_tests_for(act, options.dup)
+      end
+      return
+    end
+
     options = {
         allow_anon: false,
         allow_any_user: false,
@@ -195,13 +203,6 @@ ActiveSupport::TestCase.class_eval do
         failure: 'root_url',
         anon_failure: 'login_url'
     }.merge(options || {})
-
-    if action.respond_to?(:each)
-      action.each do |act|
-        access_tests_for(act, options.dup)
-      end
-      return
-    end
 
     action = action.to_sym
     params = options[:"#{action}_params"]

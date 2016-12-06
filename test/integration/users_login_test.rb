@@ -6,6 +6,13 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
     @user = users(:admin)
   end
 
+  access_tests_for :new,
+                   controller: 'sessions',
+                   url_helper: 'login_path',
+                   allow_anon: true,
+                   allow_any_user: false,
+                   allow_admin: false
+
   test 'login with invalid information' do
     get login_path
     assert_template 'sessions/new'
