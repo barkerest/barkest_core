@@ -3,7 +3,17 @@ require 'test_helper'
 class BarkestCoreTest < ActiveSupport::TestCase
 
   test 'should be able to request restart' do
+
+    # we shouldn't know how to do this ...
+    # anyway, we're essentially purging the restart file
+    # so any other tests that may have touched it won't
+    # cause this test to fail.
+    file = BarkestCore.send(:restart_file)
+    File.delete(file) if File.exist?(file)
+
+    # the file shouldn't exists, so this should return false.
     assert_not BarkestCore.restart_pending?
+
     BarkestCore.request_restart
     assert BarkestCore.restart_pending?
   end
