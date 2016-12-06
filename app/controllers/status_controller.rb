@@ -112,7 +112,7 @@ class StatusController < ApplicationController
   private
 
   def check_for_user
-    redirect_to root_url unless logged_in?
+    authorize! true
   end
 
   def start_position
