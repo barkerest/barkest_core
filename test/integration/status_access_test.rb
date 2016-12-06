@@ -1,3 +1,5 @@
+require 'test_helper'
+
 class StatusAccessTest < ActionDispatch::IntegrationTest
 
   access_tests_for :first,

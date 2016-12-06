@@ -1,3 +1,5 @@
+require 'test_helper'
+
 class UsersAccessTest < ActionDispatch::IntegrationTest
   access_tests_for [ :index, :show ],
                    controller: 'users',

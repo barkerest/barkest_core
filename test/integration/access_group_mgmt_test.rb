@@ -1,3 +1,5 @@
+require 'test_helper'
+
 class AccessGroupMgmtTest < ActionDispatch::IntegrationTest
 
   def setup

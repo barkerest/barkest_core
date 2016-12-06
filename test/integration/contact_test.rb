@@ -1,3 +1,5 @@
+require 'test_helper'
+
 class ContactTest < ActionDispatch::IntegrationTest
 
   def setup

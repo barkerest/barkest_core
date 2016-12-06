@@ -1,3 +1,5 @@
+require 'test_helper'
+
 class AccountActivationsAccessTest < ActionDispatch::IntegrationTest
   access_tests_for :edit,
                    controller: 'account_activations',

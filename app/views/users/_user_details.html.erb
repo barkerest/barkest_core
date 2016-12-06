@@ -1,0 +1,15 @@
+<label>Email</label>
+<p><%= user.email %></p>
+
+<label>Account Created</label>
+<p><%= user.created_at.strftime('%Y-%m-%d %H:%M') %></p>
+
+<label>Account Type</label>
+<p><%= user.ldap? ? 'Directory' : 'Local' %></p>
+
+<p>
+  This section can be filled in with whatever information you desire.
+  Simply create a <code>users/_user_details.html.erb</code> view and fill in your information.
+  Within this view you can access the user's details via the <code>user</code> variable.
+</p>
+
