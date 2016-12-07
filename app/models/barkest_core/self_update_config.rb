@@ -19,8 +19,8 @@ module BarkestCore
     end
 
     def port
-      val = @port || 22
-      val = val.to_s.to_i
+      @port ||= 22
+      val = @port.to_s.to_i
       (1...65536).include?(val) ? val : 22
     end
 

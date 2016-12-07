@@ -12,6 +12,7 @@ module BarkestCore
     # When used, the match will include a USER and DOMAIN element to represent the broken down email address.
     VALID_EMAIL_REGEX = /\A(?<USER>[\w+\-.]+)@(?<DOMAIN>[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+)\z/i
 
+
     ##
     # Validates the supplied email address against the VALID_EMAIL_REGEX.
     #
@@ -28,18 +29,27 @@ module BarkestCore
     # :nodoc:
     def self.included(base)
       base.class_eval do
-
-        protected
-
         ##
         # Validates the supplied email address against the VALID_EMAIL_REGEX.
         #
         # The +check_dns+ option ensures that an MX record can be found for the email address.
-        def valid_email?(email, check_dns = false)
+        def self.valid_email?(email, check_dns = false)
           BarkestCore::EmailTester.valid_email? email, check_dns
         end
 
       end
     end
+
+    protected
+
+    ##
+    # Validates the supplied email address against the VALID_EMAIL_REGEX.
+    #
+    # The +check_dns+ option ensures that an MX record can be found for the email address.
+    def valid_email?(email, check_dns = false)
+      BarkestCore::EmailTester.valid_email? email, check_dns
+    end
+
+
   end
 end

@@ -14,15 +14,11 @@ class Prawn::Document
   #
   def object_field_value(method)
     meth = "#{method}_before_type_cast"
-    Rails.logger.debug("method='#{method}' and meth='#{meth}'")
     if object && object.respond_to?(meth)
-      Rails.logger.debug('using meth')
       object.send(meth)
     elsif object && object.respond_to?(method)
-      Rails.logger.debug('using method')
       object.send(method)
     else
-      Rails.logger.debug('neither exists')
       method.to_s.humanize
     end
   end

@@ -253,6 +253,10 @@ module BarkestCore
       value.nil? ? 'NULL' : "'#{value.to_s.gsub('\'','\'\'')}'"
     end
 
+    def parse_for_string_filter(value)
+      self.class.parse_for_string_filter value
+    end
+
     def self.connection_handler
       @conn_handler ||= const_get('ActiveRecord::Base')
     end
@@ -369,27 +373,27 @@ module BarkestCore
 
         if type == 'int' || type == 'integer'
           define_method setter do |value|
-            instance_variable_set "@#{col_key}", self.class.parse_for_int_column(value)
+            instance_variable_set "@#{col_key}", parse_for_int_column(value)
           end
           col_info[:type] = :integer
         elsif type == 'float'
           define_method setter do |value|
-            instance_variable_set "@#{col_key}", self.class.parse_for_float_column(value)
+            instance_variable_set "@#{col_key}", parse_for_float_column(value)
           end
           col_info[:type] = :float
         elsif type == 'date' || (type == 'datetime' && col_key.to_s.include?('date'))
           define_method setter do |value|
-            instance_variable_set "@#{col_key}", self.class.parse_for_date_column(value)
+            instance_variable_set "@#{col_key}", parse_for_date_column(value)
           end
           col_info[:type] = :datetime
         elsif type == 'datetime'
           define_method setter do |value|
-            instance_variable_set "@#{col_key}", self.class.parse_for_time_column(value)
+            instance_variable_set "@#{col_key}", parse_for_time_column(value)
           end
           col_info[:type] = :datetime
         elsif type == 'bit'
           define_method setter do |value|
-            instance_variable_set "@#{col_key}", self.class.parse_for_boolean_column(value)
+            instance_variable_set "@#{col_key}", parse_for_boolean_column(value)
           end
           define_method "#{getter}?" do
             instance_variable_get "@#{col_key}"

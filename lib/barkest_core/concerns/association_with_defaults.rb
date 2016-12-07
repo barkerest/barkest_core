@@ -15,7 +15,7 @@ module BarkestCore
   #
   #     class User
   #       ...
-  #       has_many :accesses, ->{ extending BarkestCommon::AssociationWithDefaults } do
+  #       has_many :accesses, ->{ extending BarkestCore::AssociationWithDefaults } do
   #         def association_defaults(attributes = {})
   #           {
   #             org_id: proxy_association.owner.current_organization.id,
@@ -38,7 +38,7 @@ module BarkestCore
 
     def build(*args)
       args << {} if args.blank?
-      args = args.map { |a| association_defaults(a) }
+      args = args.map { |a| a.is_a?(Hash) ? association_defaults(a) : a }
       super(*args)
     end
 
