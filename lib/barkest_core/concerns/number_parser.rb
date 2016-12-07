@@ -6,7 +6,7 @@ module BarkestCore
 
     ##
     # This regular expression should match any non-exponential numeric value.
-    NUMBER_REGEX = /^-?(?:[0-9]+,)*[0-9]+(?:\.[0-9]+)?$/
+    NUMBER_REGEX = /^[\-\+]?(?:[0-9]+,)*[0-9]+(?:\.[0-9]+)?$/
 
     ##
     # Parses a value for storage in a float column.
