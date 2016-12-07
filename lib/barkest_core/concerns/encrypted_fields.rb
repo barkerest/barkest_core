@@ -4,6 +4,14 @@ module BarkestCore
 
   ##
   # Adds helper methods to the model to allow easy manipulation of fields stored as encrypted values.
+  #
+  # The encryption password is specified in +secrets.yml+.
+  #
+  # For a class MyNamespace::MyClass you can specify the encryption password using +my_namespace_my_class+
+  # or +my_class+ keys in the appropriate section of +secrets.yml+.
+  #
+  # If no specific encryption password is provided, then +secret_key_base+ is used instead.
+  #
   module EncryptedFields
 
     # :nodoc:
@@ -13,7 +21,18 @@ module BarkestCore
         private
 
         def self.crypto_password
-          @crypto_password ||= Rails.application.secrets[:secret_key_base]
+          @crypto_password ||=
+              begin
+                klass = self.class.name.to_s.underscore
+                if klass.include?('/')
+                  Rails.application.secrets[klass.gsub('/','_').to_sym] ||
+                      Rails.application.secrets[klass.rpartition('/')[2].to_sym] ||
+                      Rails.application.secrets[:secret_key_base]
+                else
+                  Rails.application.secrets[klass.to_sym] ||
+                      Rails.application.secrets[:secret_key_base]
+                end
+              end
         end
 
         def self.crypto_cipher
@@ -29,7 +48,9 @@ module BarkestCore
         public
 
         ##
-        # Encrypts a value using this models key.
+        # Encrypts a value using this model's key.
+        #
+        # Will not encrypt nil or empty strings.
         def self.encrypt_value(value)
           return nil if value.nil?
           return '' if value == ''

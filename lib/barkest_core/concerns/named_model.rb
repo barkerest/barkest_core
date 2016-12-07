@@ -52,11 +52,16 @@ module BarkestCore
             id == other
           elsif other.is_a?(String)
             send( self.class.unique_string_field ).to_s.downcase == other.downcase
+          elsif other.is_a?(Symbol)
+            [
+                other.to_s.downcase,
+                other.to_s.humanize.downcase
+            ].include?(send( self.class.unique_string_field ).to_s.downcase)
           elsif other.is_a?(self.class)
             id == other.id
           else
             other = self.class.get(other)
-            other ? id == other.id : false
+            other && id == other.id
           end
         end
 
