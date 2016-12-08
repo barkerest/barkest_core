@@ -1,0 +1,23 @@
+# add a header row.
+csv << [
+    'Code',
+    'Name',
+    'Email',
+    'Date of Birth',
+    'Hire Date',
+    'Pay Rate',
+    'Hours'
+]
+
+# add the data rows.
+@data.each do |row|
+  csv << [
+      row.code,
+      row.name,
+      row.email,
+      row.date_of_birth.to_s(:date4),
+      row.hire_date.to_s(:date4),
+      row.pay_rate,
+      row.hours
+  ]
+end

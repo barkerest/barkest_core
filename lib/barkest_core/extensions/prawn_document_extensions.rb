@@ -1,5 +1,6 @@
 require 'prawn'
 require 'prawn/table'
+require 'prawn-rails'
 
 ##
 # Additions and improvements made to the Prawn::Document class.
@@ -155,7 +156,8 @@ class Prawn::Document
   # Creates a header row for a page.
   #
   # The text is 20pt and bold.
-  # The +height+ would be the height you want your header row to be.
+  # The +height+ would be the height you want your header row to be in percent.  4 is a good starting point for portrait.
+  #
   #
   def header(height, *columns)
     columns = columns.to_a.map{ |v| preprocess_table_data(v) }

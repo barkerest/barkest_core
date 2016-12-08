@@ -32,6 +32,14 @@ Rails::Application.class_eval do
   end
 
   ##
+  # Gets the company responsible for the application.
+  #
+  # This should be overridden in your +application.rb+ file.
+  def app_company
+    'BarkerEST'
+  end
+
+  ##
   # Gets the application name and version.
   #
   # This can be overridden in your +application.rb+ file if you want a different behavior.

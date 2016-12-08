@@ -3,7 +3,8 @@ module BarkestCore
     include ActiveModel::Model
     include ActiveModel::Validations
 
-    attr_accessor :host, :port, :user, :password
+    attr_accessor :host, :user, :password
+    attr_writer :port
 
     validates :host, presence: true
     validates :user, presence: true

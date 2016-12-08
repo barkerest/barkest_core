@@ -249,6 +249,6 @@ module BarkestCore
 end
 
 # Preload the concerns and process the extensions.
-Dir.glob(File.expand_path('../barkest_core/{concerns,extensions}/*.rb', __FILE__)).each do |lib_code|
+Dir.glob(File.expand_path('../barkest_core/{concerns,extensions,handlers}/*.rb', __FILE__)).each do |lib_code|
   require lib_code
 end

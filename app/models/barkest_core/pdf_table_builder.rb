@@ -20,6 +20,7 @@ module BarkestCore
       @col_offset = 0
       @row_offset = 0
       @col_start = 0
+      @in_row = false
 
       @base_cell_options = { borders: [] }.merge(options[:cell_style] || { })
       @options = options.except(:cell_style)

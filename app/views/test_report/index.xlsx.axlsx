@@ -1,0 +1,28 @@
+xlsx_package.simple('Test Report') do |sheet,styles|
+
+  sheet.workbook.package.core.created = Time.zone.local(2016, 12, 8, 15, 0)
+
+  # add the header row.
+  sheet.add_combined_row [
+      [ 'Code', :bold ],
+      [ 'Name', :bold ],
+      [ 'Email', :bold ],
+      [ 'Date of Birth', :bold ],
+      [ 'Hire Date', :bold ],
+      [ 'Pay Rate', :bold ],
+      [ 'Hours', :bold ]
+  ]
+
+  # now the data rows.
+  @data.each do |row|
+    sheet.add_combined_row [
+                               row.code,
+                               row.name,
+                               row.email,
+                               [ row.date_of_birth, :date ],
+                               [ row.hire_date, :date ],
+                               [ row.pay_rate, :currency ],
+                               [ row.hours, :integer ]
+                           ]
+  end
+end

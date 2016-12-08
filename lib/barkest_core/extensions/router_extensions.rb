@@ -32,6 +32,7 @@ ActionDispatch::Routing::Mapper.class_eval do
           get     'test_access/require_user'
           get     'test_access/require_admin'
           get     'test_access/require_group_x'
+          get     'test_report' => 'test_report#index'
         end
       end
 

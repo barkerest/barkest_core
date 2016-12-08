@@ -1,6 +1,5 @@
 require 'jquery-rails'
 require 'bootstrap-sass'
-require 'prawn-rails'
 require 'ntlm/smtp'
 require 'exception_notification'
 
@@ -9,7 +8,11 @@ module BarkestCore
 
 
     # Ensure the default logo gets compiled.
-    config.assets.precompile += %w( barkest_core/barcode-B.svg )
+    config.assets.precompile += %w( barkest_core/barcode-B.svg
+barkest_core/ArchivoNarrow-Bold.ttf
+barkest_core/ArchivoNarrow-BoldItalic.ttf
+barkest_core/ArchivoNarrow-Italic.ttf
+barkest_core/ArchivoNarrow-Regular.ttf  )
 
     ##
     # Initialize the library.
@@ -63,6 +66,14 @@ module BarkestCore
         config.page_size = 'LETTER'
       end
 
+      ActionView::Template.register_template_handler :csvrb, BarkestCore::CsvHandler::Handler
+
+
+      # add date formats for American formatted dates.
+      Time::DATE_FORMATS[:date] = '%m/%d/%y'
+      Time::DATE_FORMATS[:date4] = '%m/%d/%Y'
+      Date::DATE_FORMATS[:date] = '%m/%d/%y'
+      Date::DATE_FORMATS[:date4] = '%m/%d/%Y'
 
     end
 
