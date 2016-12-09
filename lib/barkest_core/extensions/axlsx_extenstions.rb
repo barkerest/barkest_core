@@ -23,6 +23,8 @@ module Axlsx
       end
     end
 
+    alias :barkest_core_original_workbook :workbook
+
     # :nodoc:
     def workbook
       @workbook ||= Workbook.new
@@ -70,6 +72,8 @@ module Axlsx
 
   # :nodoc:
   class Cell
+
+    alias :barkest_core_original_cast_value :cast_value
 
     # Fix the conversion of Date/Time values.
     # :nodoc:

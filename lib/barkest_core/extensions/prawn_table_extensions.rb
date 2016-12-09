@@ -55,6 +55,8 @@ module Prawn::Table::Interface
 
   public
 
+  alias :barkest_core_original_table :table
+
   ##
   # An overridden version of the table method allowing for more powerful options and dynamic data.
   #
@@ -81,6 +83,8 @@ module Prawn::Table::Interface
     t.draw
     t
   end
+
+  alias :barkest_core_original_make_table :make_table
 
   ##
   # This is the same as #table except the table is not rendered after construction.

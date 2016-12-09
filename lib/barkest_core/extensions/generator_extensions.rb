@@ -172,7 +172,6 @@ Rails::Generators::Base.class_eval do
     tell '=' * 79
     if ask_for_bool("Would you like to configure #{what.pluralize}?", true)
       current_config = File.exist?(config_file) ? YAML.load_file(config_file) : {}
-      last_level = nil
       levels = ([''] + (optional_levels || [])).uniq
       levels.each do |level|
         if level.blank? || ask_for_bool("Would you like to configure a #{level} #{what.singularize} configuration?", false)

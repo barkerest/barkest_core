@@ -7,7 +7,6 @@ class SystemConfigTest < ActiveSupport::TestCase
       :world,
       1234,
       56.789,
-      nil,
       true,
       false,
       [ 1, 2, 3 ],
@@ -68,6 +67,12 @@ class SystemConfigTest < ActiveSupport::TestCase
       assert_equal test_value, SystemConfig.get('ABC')
       assert_equal test_value, SystemConfig.get('XYZ')
     end
+    SystemConfig.set 'abc', nil
+    SystemConfig.set 'Xyz', nil
+    assert_nil SystemConfig.get('abc')
+    assert_nil SystemConfig.get('xyz')
+    assert_nil SystemConfig.get('ABC')
+    assert_nil SystemConfig.get('XYZ')
   end
 
 end
