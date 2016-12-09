@@ -49,16 +49,17 @@ module BarkestCore
           # for any db connection other than the core connection, check
           # in the system config table as well.
           syscfg = (other == :barkest_core) ? nil : SystemConfig.get(other)
+          defcfg = (other == :barkest_core) ? avail[env] : db_config_defaults(other)
 
           # Preference
           avail[key] ||                         # 1: barkest_core_development
           avail[other] ||                       # 2: barkest_core
           syscfg ||                             # 3: SystemConfig: barkest_core
-          avail[env] ||                         # 4: development
-          ActiveRecord::Base.connection_config  # 5: default connection
+          defcfg ||                             # 4: YAML[env] or defaults depending on db name
+          ActiveRecord::Base.connection_config  # 5: default connection (hopefully never gets used)
         end
 
-      @db_configs[key] = (@db_configs[key] || db_config_defaults(other)).symbolize_keys
+      @db_configs[key] = @db_configs[key].symbolize_keys
     elsif env
       db_config(:barkest_core, env)
     else

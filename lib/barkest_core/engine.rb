@@ -15,6 +15,27 @@ barkest_core/ArchivoNarrow-Italic.ttf
 barkest_core/ArchivoNarrow-Regular.ttf  )
 
     ##
+    # Update the databases as needed.
+    Rails::Application::Finisher.initializer 'barkest_core.finisher' do |app|
+      MsSqlDbUpdater.registered.each do |name,updater|
+        config = BarkestCore.db_config(name)
+        if config[:database] && config[:host]
+          Rails.logger.debug "Beginning updates for #{name} DB."
+          begin
+            updater.update_db config
+          rescue BarkestCore::MsSqlDbUpdater::NeedFullAccess => e
+            Rails.logger.error "The configuration for #{name} DB is missing a valid update user."
+          rescue StandardError => e
+            Rails.logger.error "The updater for #{name} DB was unable to complete.\n#{e}"
+          end
+        else
+          Rails.logger.warn "Skipping updates for #{name} DB since :database and/or :host is not set."
+        end
+      end
+    end
+
+
+    ##
     # Initialize the library.
     initializer 'barkest_core.initialize' do |app|
 

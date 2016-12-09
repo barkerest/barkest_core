@@ -176,6 +176,27 @@ module BarkestCore
     end
 
     ##
+    # Creates a label followed by small text.
+    #
+    # Set the :small_text option to include small text.
+    def label_with_small(f, method, text=nil, options = {}, &block)
+      if text.is_a?(Hash)
+        options = text
+        text = nil
+      end
+      small_text = options.delete(:small_text)
+      text = text || options.delete(:text) || method.to_s.humanize.capitalize
+      lbl = f.label(method, text, options, &block) #do
+      #  contents = text
+      #  contents += "<small>#{h small_text}</small>" if small_text
+      #  contents += yield if block_given?
+      #  contents.html_safe
+      #end
+      lbl += "&nbsp;<small>(#{h small_text})</small>".html_safe if small_text
+      lbl.html_safe
+    end
+
+    ##
     # Creates a form group including a label and a text field.
     #
     # To specify a label, set the +label_text+ option, otherwise the method name will be used.
@@ -183,7 +204,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def text_form_group(f, method, options = {})
       gopt, lopt, fopt = split_form_group_options(options)
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       fld = gopt[:wrap].call(f.text_field(method, fopt))
       form_group lbl, fld, gopt
     end
@@ -196,7 +217,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def textarea_form_group(f, method, options = {})
       gopt, lopt, fopt = split_form_group_options(options)
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       fld = gopt[:wrap].call(f.text_area(method, fopt))
       form_group lbl, fld, gopt
     end
@@ -209,7 +230,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def currency_form_group(f, method, options = {})
       gopt, lopt, fopt = split_form_group_options(options)
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       fld = gopt[:wrap].call(currency_field(f, method, fopt))
       form_group lbl, fld, gopt
     end
@@ -223,7 +244,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def static_form_group(f, method, options = {})
       gopt, lopt, fopt = split_form_group_options(options)
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       fld = gopt[:wrap].call("<input type=\"text\" class=\"form-control disabled\" readonly=\"readonly\" value=\"#{h(fopt[:value] || f.object.send(method))}\">")
       form_group lbl, fld, gopt
     end
@@ -236,7 +257,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def date_picker_form_group(f, method, options = {})
       gopt, lopt, fopt = split_form_group_options(options)
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       fld = gopt[:wrap].call(date_picker_field(f, method, fopt))
       form_group lbl, fld, gopt
     end
@@ -253,7 +274,7 @@ module BarkestCore
       if lopt[:text].blank?
         lopt[:text] = methods.map {|k,_| k.to_s.humanize }.join(', ')
       end
-      lbl = f.label methods.map{|k,_| k}.first, lopt[:text], lopt
+      lbl = f.label_with_small methods.map{|k,_| k}.first, lopt[:text], lopt
       fld = gopt[:wrap].call(multi_input_field(f, methods, fopt))
       form_group lbl, fld, gopt
     end
@@ -274,7 +295,13 @@ module BarkestCore
       end
 
       lbl = f.label method do
-        f.check_box(method, fopt) + h(lopt[:text] || method.to_s.humanize)
+        f.check_box(method, fopt) +
+            h(lopt[:text] || method.to_s.humanize) +
+            if lopt[:small_text]
+              "<small>#{h lopt[:small_text]}</small>"
+            else
+              ''
+            end.html_safe
       end
 
       "<div class=\"#{gopt[:h_align] ? 'row' : 'form-group'}\"><div class=\"#{gopt[:class]}\">#{lbl}</div></div>".html_safe
@@ -288,7 +315,7 @@ module BarkestCore
     # Any additional options are passed to the form group.
     def select_form_group(f, method, collection, value_method = nil, text_method = nil, options = {})
       gopt, lopt, fopt = split_form_group_options({ field_include_blank: true }.merge(options))
-      lbl = f.label method, lopt.delete(:text), lopt
+      lbl = f.label_with_small method, lopt.delete(:text), lopt
       value_method ||= :to_s
       text_method ||= :to_s
       opt = {}
@@ -358,6 +385,11 @@ end
 # :enddoc:
 
 ActionView::Helpers::FormBuilder.class_eval do
+
+  def label_with_small(method, text = nil, options = {}, &block)
+    @template.send(:label_with_small, self, method, text, options, &block)
+  end
+
   def date_picker_field(method, options = {})
     @template.send(:date_picker_field, self, method, options)
   end
@@ -396,5 +428,9 @@ ActionView::Helpers::FormBuilder.class_eval do
 
   def select_form_group(method, collection, value_method = nil, text_method = nil, options = {})
     @template.send(:select_form_group, self, method, collection, value_method, text_method, options)
+  end
+
+  def checkbox_form_group(method, options = {})
+    @template.send(:checkbox_form_group, self, method, options)
   end
 end

@@ -41,24 +41,28 @@ class SystemConfig < ::BarkestCore::DbTable
   # value is missing.
   #
   def self.get(key_name)
-    record = where(key: key_name.to_s.downcase).first
+    begin
+      record = where(key: key_name.to_s.downcase).first
 
-    if record
-      value = record.value
-      if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
-        value = value[:encrypted_value]
-        unless value.nil? || value == ''
-          value = YAML.load(crypto_cipher.decrypt(value)) rescue nil
+      if record
+        value = record.value
+        if value.is_a?(Hash) && value.keys.include?(:encrypted_value)
+          value = value[:encrypted_value]
+          unless value.nil? || value == ''
+            value = YAML.load(crypto_cipher.decrypt(value)) rescue nil
+          end
         end
+      elsif Rails.env.test?
+        yml_file = "#{BarkestCore.app_root}/config/#{key_name}.yml"
+        value = File.exist?(yml_file) ? YAML.load_file(yml_file) : nil
+      else
+        value = nil
       end
-    elsif Rails.env.test?
-      yml_file = "#{BarkestCore.app_root}/config/#{key_name}.yml"
-      value = File.exist?(yml_file) ? YAML.load_file(yml_file) : nil
-    else
-      value = nil
-    end
 
-    value
+      value
+    rescue
+      nil # if 'system_configs' table has not been created, return nil.
+    end
   end
 
   ##

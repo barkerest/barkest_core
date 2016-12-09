@@ -78,16 +78,17 @@ ActionDispatch::Routing::Mapper.class_eval do
       get       'system_update'           => 'system_update#index', as: :system_update
 
       # system configuration paths
-      get       'system_config'               => 'system_config#index',             as: :system_config
-      post      'system_config/restart'       => 'system_config#restart',           as: :system_config_restart
-      get       'system_config/auth'          => 'system_config#show_auth',         as: :system_config_auth
-      post      'system_config/auth'          => 'system_config#update_auth'
-      get       'system_config/email'         => 'system_config#show_email',        as: :system_config_email
-      post      'system_config/email'         => 'system_config#update_email'
-      get       'system_config/database/:id'  => 'system_config#show_database',     as: :system_config_database
-      post      'system_config/database/:id'  => 'system_config#update_database'
-      get       'system_config/self_update'   => 'system_config#show_self_update',  as: :system_config_self_update
-      post      'system_config/self_update'   => 'system_config#update_self_update'
+      get       'system_config'                     => 'system_config#index',               as: :system_config
+      post      'system_config/restart'             => 'system_config#restart',             as: :system_config_restart
+      SystemConfigController.get_config_items.sort.each do |(item_name, attrib)|
+        if attrib[:require_id]
+          get     "system_config/#{item_name}/:id"  => "system_config#show_#{item_name}",   as: attrib[:route_name]
+          post    "system_config/#{item_name}/:id"  => "system_config#update_#{item_name}"
+        else
+          get     "system_config/#{item_name}"      => "system_config#show_#{item_name}",   as: attrib[:route_name]
+          post    "system_config/#{item_name}"      => "system_config#update_#{item_name}"
+        end
+      end
 
     end
   end

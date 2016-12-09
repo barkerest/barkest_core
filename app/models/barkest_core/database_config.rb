@@ -12,7 +12,12 @@ module BarkestCore
     include ActiveModel::Validations
 
     attr_accessor :name, :adapter, :encoding, :reconnect, :database, :pool, :username, :password, :timeout, :host, :port
-    attr_accessor :extra_1_name, :extra_1_type, :extra_1_value, :extra_2_name, :extra_2_type, :extra_2_value
+    attr_accessor :extra_1_name, :extra_1_label, :extra_1_type, :extra_1_value
+    attr_accessor :extra_2_name, :extra_2_label, :extra_2_type, :extra_2_value
+    attr_accessor :extra_3_name, :extra_3_label, :extra_3_type, :extra_3_value
+    attr_accessor :extra_4_name, :extra_4_label, :extra_4_type, :extra_4_value
+    attr_accessor :extra_5_name, :extra_5_label, :extra_5_type, :extra_5_value
+    attr_accessor :update_username, :update_password
 
     VALID_ADAPTERS = %w(sqlite3 mysql2 postgresql sqlserver)
 
@@ -75,8 +80,81 @@ module BarkestCore
     end
 
     ##
+    # Gets the name for an extra value.
+    def extra_name(index)
+      return nil if index < 1 || index > 5
+      send "extra_#{index}_name"
+    end
+
+    ##
+    # Gets the label for an extra value.
+    def extra_label(index)
+      return nil if index < 1 || index > 5
+      txt = send("extra_#{index}_label")
+      txt = extra_name(index).to_s.humanize.capitalize if txt.blank?
+      txt
+    end
+
+    ##
+    # Gets the type for an extra value.
+    def extra_type(index)
+      return nil if index < 1 || index > 5
+      send "extra_#{index}_type"
+    end
+
+    ##
+    # Gets the field type for an extra value.
+    def extra_field_type(index)
+      t = extra_type(index).to_s
+      case t
+        when 'password'
+          'password'
+        when 'integer', 'float'
+          'number'
+        when 'boolean'
+          'checkbox'
+        else
+          if t.downcase.index('in:')
+            'select'
+          else
+            'text'
+          end
+      end
+    end
+
+    ##
+    # Gets the options for a select field.
+    def extra_field_options(index)
+      if extra_field_type(index) == 'select'
+        eval extra_type(index).partition(':')[2]
+      else
+        nil
+      end
+    end
+
+    ##
+    # Gets an extra value.
+    def extra_value(index, convert = false)
+      return nil if index < 1 || index > 5
+      val = send "extra_#{index}_value"
+      if convert
+        case extra_type(index)
+          when 'boolean'
+            BarkestCore::BooleanParser.parse_for_boolean_column(val)
+          when 'integer'
+            BarkestCore::NumberParser.parse_for_int_column(val)
+          when 'float'
+            BarkestCore::NumberParser.parse_for_float_column(val)
+          else
+            val.to_s
+        end
+      end
+    end
+
+
+    ##
     # Converts this configuration into a hash.
-    def to_h
+    def to_h(convert_extra = true)
       ret = {
           adapter: adapter.to_s,
           database: database.to_s,
@@ -89,22 +167,16 @@ module BarkestCore
           username: username.blank? ? nil : username.to_s,
           password: password.blank? ? nil : password.to_s,
       }
-      (1..2).each do |idx|
-        name = send(:"extra_#{idx}_name")
-        type = send(:"extra_#{idx}_type")
-        val = send(:"extra_#{idx}_value")
-        unless name.blank?
-          ret[name.to_s.to_sym] =
-              case type.to_s.downcase
-                when 'bool'
-                  %w(true on yes 1).include?(val.to_s.downcase)
-                when 'int'
-                  val.to_s.to_i
-                when 'float'
-                  val.to_s.to_f
-                else
-                  val.blank? ? nil : extra_1_value.to_s
-              end
+      (1..5).each do |idx|
+        if convert_extra
+          unless extra_name(idx).blank?
+            ret[extra_name(idx).to_sym] = extra_value(idx, true)
+          end
+        else
+          ret[:"extra_#{idx}_name"] = send(:"extra_#{idx}_name")
+          ret[:"extra_#{idx}_label"] = send(:"extra_#{idx}_label")
+          ret[:"extra_#{idx}_type"] = send(:"extra_#{idx}_type")
+          ret[:"extra_#{idx}_value"] = send(:"extra_#{idx}_value")
         end
       end
       ret
@@ -113,7 +185,7 @@ module BarkestCore
     ##
     # Saves this configuration (encrypted) to SystemConfig.
     def save
-      SystemConfig.set name, to_h, true
+      SystemConfig.set name, to_h(false), true
     end
 
     ##

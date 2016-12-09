@@ -1,18 +1,34 @@
 <% provide :title, "Configure #{@db_id.humanize.titlecase} Database" %>
 
 <%= error_summary(@db_config) %>
-<%= panel "Configure #{@db_id.humanize.titlecase}" do %>
+<%= panel "Configure #{@db_id.humanize.titlecase} Database" do %>
     <%= form_for @db_config, url: system_config_database_url(@db_id), method: :post do |f| %>
         <%= f.select_form_group :adapter, BarkestCore::DatabaseConfig::VALID_ADAPTERS, :to_s, :to_s %>
         <%= f.text_form_group :database %>
         <%= f.text_form_group :pool %>
         <%= f.text_form_group :timeout %>
-        <div class="form-group"><label><%= f.check_box :reconnect %> Automatically reconnect?</label></div>
+        <%= f.checkbox_form_group :reconnect, label_text: 'Automatically reconnect?' %>
         <%= f.text_form_group :encoding %>
         <%= f.text_form_group :host %>
         <%= f.text_form_group :port %>
-        <%= f.text_form_group :username %>
+        <%= f.text_form_group :username, label_small_text: 'runtime user should be a limited user' %>
         <%= f.text_form_group :password, field_type: :password %>
+        <%= f.text_form_group :update_username, label_small_text: 'update user should be an admin user, required for auto-update' %>
+        <%= f.text_form_group :update_password, field_type: :password %>
+        <% (1..5).each do |idx| %>
+            <% unless @db_config.extra_name(idx).blank? %>
+                <%= f.hidden_field "extra_#{idx}_name" %>
+                <%= f.hidden_field "extra_#{idx}_label" %>
+                <%= f.hidden_field "extra_#{idx}_type" %>
+                <% if @db_config.extra_field_type(idx) == 'checkbox' %>
+                    <%= f.checkbox_form_group "extra_#{idx}_value", label_text: @db_config.extra_label(idx) %>
+                <% elsif @db_config.extra_field_type(idx) == 'select' %>
+                    <%= f.select_form_group "extra_#{idx}_value", @db_config.extra_field_options(idx), :to_s, :to_s, label_text: @db_config.extra_label(idx) %>
+                <% else %>
+                    <%= f.text_form_group "extra_#{idx}_value", label_text: @db_config.extra_label(idx), field_type: @db_config.extra_field_type(idx) %>
+                <% end %>
+            <% end %>
+        <% end %>
         <br>
         <%= f.submit 'Save Configuration', class: 'btn btn-success' %>
         <%= link_to 'Cancel', system_config_path, class: 'btn btn-default' %>

@@ -31,6 +31,23 @@ module BarkestCore
       self.abstract_class = true
     end
 
+    ##
+    # Defines a new updater.
+    #
+    # Options can include +source_paths+, +before_update+, and +after_update+.
+    #
+    # The +before_update+ and +after_update+ options define a callback to be run before or after
+    # the database update is performed.  This can be a string referencing a method or it can be a Proc.
+    #
+    #   MsSqlDbUpdater.new(
+    #     :before_update => 'MyClass.my_method(db_conn,user)',
+    #     :after_update => Proc.new do |db_conn, user|
+    #                        ...
+    #                      end
+    #   )
+    #
+    # If you use the string option, note that the +db_conn+ and +user+ variables are available.  In the example
+    # above they are being passed to the method as arguments.
     def initialize(options = {})
       options = {
           table_name_prefix: 'zz_barkest_'
@@ -42,9 +59,8 @@ module BarkestCore
 
       @sources = [ ]
       @source_paths = [ ]
-
-      # 'sql/barkest' relative to the running application.
-      add_source_path 'sql/barkest'
+      @pre_update = options.delete(:before_update) || options.delete(:pre_update)
+      @post_update = options.delete(:after_update) || options.delete(:post_update)
 
       # and any other paths provided via options.
       if options[:source_paths]
@@ -55,20 +71,40 @@ module BarkestCore
             add_source_path path.to_s
           end
         else
-          add_source_path path.to_s
+          add_source_path options[:source_paths].to_s
         end
       end
 
     end
 
+    ##
+    # Gets an object's name according to this DB updater.
+    def object_name(unprefixed_name)
+      name = unprefixed_name.to_s
+      return name if name.index(table_prefix) == 0
+      "#{table_prefix}#{name}"
+    end
+
+    ##
+    # Gets all of the source paths that have currently been searched.
     def source_paths
       @source_paths.dup.freeze
     end
 
+    ##
+    # Gets all of the sources currently loaded.
     def sources
-      @sources.dup.freeze
+      @sources.dup.map{|t| t.name_prefix = table_prefix; t}.freeze
     end
 
+    ##
+    # Adds a source using a specific timestamp.
+    #
+    # The +timestamp+ should be in the form YYYYMMDDHHMM, but will be right-padded with zeroes to fill out the full
+    # width if you only specify part.
+    #   20161209 => 201612090000
+    #
+    # The +sql+ should be a valid create/alter table/view/function statement.
     def add_source(timestamp, sql)
       sql_def = BarkestCore::MsSqlDefinition.new(sql, '', timestamp)
       sql_def.instance_variable_set(:@source_location, "::#{sql_def.name}::")
@@ -76,11 +112,20 @@ module BarkestCore
       nil
     end
 
+    ##
+    # Adds a MsSqlDefinition object to the sources for this updater.
+    #
+    # The +definition+ should be a previously created MsSqlDefinition object.
     def add_source_definition(definition)
       add_sql_def definition
       nil
     end
 
+    ##
+    # Adds all SQL files found in the specified directory to the sources for this updater.
+    #
+    # The +path+ should contain the SQL files.  If there are subdirectories, you should
+    # include them individually.
     def add_source_path(path)
       raise 'path must be a string' unless path.is_a?(String)
 
@@ -88,17 +133,26 @@ module BarkestCore
       raise 'cannot add root path' if path == '/'
       path = path[0...-1] if path[-1] == '/'
 
-      @source_paths << path unless @source_paths.include?(path)
+      unless @source_paths.include?(path)
+        @source_paths << path
 
-      if Dir.exist?(path)
-        Dir.glob("#{path}/*.rb").each do |source|
-          add_sql_def BarkestCore::MsSqlDefinition.new(File.read(source), source, File.mtime(source))
+        if Dir.exist?(path)
+          Dir.glob("#{path}/*.sql").each do |source|
+            add_sql_def BarkestCore::MsSqlDefinition.new(File.read(source), source, File.mtime(source))
+          end
         end
       end
 
       nil
     end
 
+    ##
+    # Performs the database update using the specified configuration.
+    #
+    # A warning will be logged if the runtime user has full access to the database.
+    #
+    # An error will be raised if there is the runtime user does not have full access and no update_user is provided,
+    # or if an update_user is provided who also does not have full access to the database.
     def update_db(config, options = {})
 
       begin
@@ -139,7 +193,11 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
           EOSQL
         end
 
-        if (proc = (options[:before_update] || options[:pre_update]))
+        if (proc = (options[:before_update] || options[:pre_update] || @pre_update))
+          if proc.is_a?(String)
+            code = proc
+            proc = Proc.new { |db_conn, user| eval code }
+          end
           if proc.respond_to?(:call)
             debug 'Running pre-update code...'
             proc.call db_connection, runtime_user
@@ -174,7 +232,11 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
           src.name_prefix = ''
         end
 
-        if (proc = (options[:after_update] || options[:post_update]))
+        if (proc = (options[:after_update] || options[:post_update] || @post_update))
+          if proc.is_a?(String)
+            code = proc
+            proc = Proc.new { |db_conn, user| eval code }
+          end
           if proc.respond_to?(:call)
             debug 'Running post-update code...'
             proc.call db_connection, runtime_user
@@ -190,7 +252,101 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
       true
     end
 
+    ##
+    # Registers a DB updater and tells BarkestCore that the named database exists and could use a configuration.
+    #
+    # The +options+ will be passed to the MsSqlDbUpdater constructor, except for the +extra_params+ key.
+    # If this key is provided, it is pulled out and used for the defaults for the database configuration.
+    #
+    # Ideally this is to provide the +extra_[1|2]_name+, +extra_[1|2]_type+, and +extra_[1|2]_value+ parameters, but
+    # you can also use it to provide reasonable defaults for +host+, +database+, or even credentials.
+    #
+    def self.register(name, options={})
+      name = symbolize_name name
+
+      raise 'already registered' if registered.include?(name)
+
+      options = (options || {}).symbolize_keys
+
+      extra_params = options.delete(:extra_params)
+      if extra_params.is_a?(Hash)
+        repeat = true
+        while repeat
+          repeat = false
+          extra_params.dup.each do |k,v|
+            if v.is_a?(Hash)
+              extra_params.delete(k)
+              v.each do |subk,subv|
+                extra_params[:"#{k}_#{subk}"] = subv
+              end
+              repeat = true
+            end
+          end
+        end
+      end
+
+      options[:table_name_prefix] ||=
+          if name.to_s.index('barkest') == 0
+            "zz_#{name}_"
+          else
+            "zz_barkest_#{name}_"
+          end
+
+      updater = MsSqlDbUpdater.new(options)
+
+      registered[name] = updater
+
+      # Register with DatabaseConfig to enable the config page for this DB.
+      DatabaseConfig.register name
+
+      cfg_def = (extra_params.is_a?(Hash) ? extra_params : {})
+                    .merge(
+                        {
+                            adapter: 'sqlserver',
+                            pool: 5,
+                            timeout: 30000,
+                            port: 1433,
+                        }
+                    )
+
+      # Register with BarkestCore so that the default configuration is somewhat appropriate.
+      BarkestCore.register_db_config_defaults name, cfg_def
+
+      updater
+    end
+
+    ##
+    # Gets a DB updater by name.
+    def self.[](name)
+      name = symbolize_name name
+      registered[name]
+    end
+
+    ##
+    # Gets a list of all the DB updaters currently registered.
+    def self.keys
+      registered.keys
+    end
+
+    ##
+    # Iterates through the registered DB updaters.
+    #
+    # Yields the db_name and the db_updater to the block.
+    def self.each
+      registered.each do |k,v|
+        yield k, v if block_given?
+      end
+    end
+
     private
+
+    def self.symbolize_name(name)
+      name.to_s.underscore.gsub('/', '_').to_sym
+    end
+
+    def self.registered
+      @registered ||= {}
+    end
 
     def get_version(object_name)
       object_name = object_name.to_s.gsub("'", "''")

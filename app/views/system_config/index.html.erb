@@ -1,10 +1,13 @@
 <%= panel 'System Configuration' do %>
     <ul>
-      <li><%= link_to 'Self Update Settings', system_config_self_update_url %></li>
-      <li><%= link_to 'User Authentication', system_config_auth_url %></li>
-      <li><%= link_to 'Email Settings', system_config_email_url %></li>
-      <% BarkestCore::DatabaseConfig.registered.each do |db_id| %>
-          <li><%= link_to 'Database Settings: ' + db_id, system_config_database_url(db_id) %></li>
+      <% SystemConfigController.get_config_items.sort.each do |(item_name,attrib)| %>
+          <% if attrib[:require_id] %>
+              <% eval(attrib[:id_provider]).each do |id| %>
+                  <li><%= link_to item_name.to_s.humanize.titlecase + ' Settings: ' + id.to_s.humanize.titlecase, eval("#{attrib[:path_helper]}(#{id.inspect})") %></li>
+              <% end %>
+          <% else %>
+              <li><%= link_to item_name.to_s.humanize.titlecase + ' Settings', eval(attrib[:path_helper].to_s) %></li>
+          <% end %>
       <% end %>
     </ul>
 
