@@ -12,11 +12,12 @@ module BarkestCore
     include ActiveModel::Validations
 
     attr_accessor :name, :adapter, :encoding, :reconnect, :database, :pool, :username, :password, :timeout, :host, :port
-    attr_accessor :extra_1_name, :extra_1_label, :extra_1_type, :extra_1_value
-    attr_accessor :extra_2_name, :extra_2_label, :extra_2_type, :extra_2_value
-    attr_accessor :extra_3_name, :extra_3_label, :extra_3_type, :extra_3_value
-    attr_accessor :extra_4_name, :extra_4_label, :extra_4_type, :extra_4_value
-    attr_accessor :extra_5_name, :extra_5_label, :extra_5_type, :extra_5_value
+    attr_accessor :extra_1_name, :extra_1_label, :extra_1_type
+    attr_accessor :extra_2_name, :extra_2_label, :extra_2_type
+    attr_accessor :extra_3_name, :extra_3_label, :extra_3_type
+    attr_accessor :extra_4_name, :extra_4_label, :extra_4_type
+    attr_accessor :extra_5_name, :extra_5_label, :extra_5_type
+    attr_writer :extra_1_value, :extra_2_value, :extra_3_value, :extra_4_value, :extra_5_value
     attr_accessor :update_username, :update_password
 
     VALID_ADAPTERS = %w(sqlite3 mysql2 postgresql sqlserver)
@@ -27,11 +28,16 @@ module BarkestCore
     validates :pool, presence: true
     validates :timeout, presence: true
 
+    EXTRA_REGEX = /^extra_(?<KEY>\d+)_(?<VAR>name|label|type|value)$/
+    VALID_EXTRA_KEY = (1..5)
+    private_constant :EXTRA_REGEX, :VALID_EXTRA_KEY
+
     ##
     # Initializes the configuration.
     #
     # Define the parameters as hash values.  A string without a key will be used to set the name.
     def initialize(*args)
+      @extra = []
       args.each do |arg|
         if arg.is_a?(String)
           self.name = arg
@@ -41,36 +47,37 @@ module BarkestCore
               send :"#{k}=", ((v === true || v === '1') ? '1' : '0')
             elsif respond_to?(:"#{k}")
               send :"#{k}=", v.to_s
-            elsif extra_1_name.nil?
-              self.extra_1_name = k.to_s
-              self.extra_1_type =
-                  if k.is_a?(TrueClass) || k.is_a?(FalseClass)
-                    'bool'
-                  elsif k.is_a?(Fixnum)
-                    'int'
-                  elsif k.is_a?(Float)
-                    'float'
-                  else
-                    'string'
-                  end
-              self.extra_1_value = v.to_s
-            elsif extra_2_name.nil?
-              self.extra_2_name = k.to_s
-              self.extra_2_type =
-                  if k.is_a?(TrueClass) || k.is_a?(FalseClass)
-                    'bool'
-                  elsif k.is_a?(Fixnum)
-                    'int'
-                  elsif k.is_a?(Float)
-                    'float'
-                  else
-                    'string'
-                  end
-              self.extra_2_value = v.to_s
+            elsif (extra = EXTRA_REGEX.match(k.to_s))
+              key = extra['KEY'].to_i
+              if VALID_EXTRA_KEY.include?(key)
+                send :"extra_#{key}_#{extra['VAR']}=", v.to_s
+              end
             end
           end
         end
       end
+    end
+
+    # :nodoc:
+    def method_missing(m,*a,&b)
+      m = m.to_s
+
+      if (key = EXTRA_REGEX.match(m))
+        if key['VAR'] == 'value'
+          key = key['KEY'].to_i
+          if VALID_EXTRA_KEY.includ?(key)
+            ivar = :"@#{m}"
+            val = instance_variable_defined?(ivar) ? instance_variable_get(ivar) : nil
+            tp = send("extra_#{key}_type")
+            if tp == 'boolean'
+              val = ((val === true) || (val == '1')) ? '1' : '0'
+            end
+            return val
+          end
+        end
+      end
+
+      super m, *a, &b
     end
 
     ##
@@ -166,8 +173,10 @@ module BarkestCore
           port: port.blank? ? nil : port.to_s.to_i,
           username: username.blank? ? nil : username.to_s,
           password: password.blank? ? nil : password.to_s,
+          update_username: update_username.blank? ? nil : update_username.to_s,
+          update_password: update_password.blank? ? nil : update_password.to_s,
       }
-      (1..5).each do |idx|
+      VALID_EXTRA_KEY.each do |idx|
         if convert_extra
           unless extra_name(idx).blank?
             ret[extra_name(idx).to_sym] = extra_value(idx, true)
