@@ -9,6 +9,10 @@ module BarkestCore
   # one DDL statement is present unless you are creating a procedure in which case this
   # check is skipped.
   #
+  # To reference another object in your definition, prefix @Z~ to the beginning of the
+  # object name.  For instance 'SELECT * FROM @Z~my_table' could be expanded to
+  # 'SELECT * FROM zz_barkest_core_my_table'.
+  #
   # Function return types are grabbed as well so you know if your function is returning
   # a table or an integral type.
   class MsSqlDefinition
@@ -168,7 +172,7 @@ module BarkestCore
     end
 
     def update_sql
-      "#{command} #{type} \"#{prefixed_name}\"\n#{definition}"
+      "#{command} #{type} \"#{prefixed_name}\"\n#{definition.gsub('@Z~',name_prefix)}"
     end
 
     def drop_sql

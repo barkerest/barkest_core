@@ -124,6 +124,156 @@ will be used.  If the value for the encryption key is changed, any stored encryp
 will be lost.  The `SystemConfig` class will return __nil__ if the value does not exist or cannot be 
 decrypted.
 
+---
+Because I generally have a need to interface with MS SQL for reporting purposes, I decided to build the
+necessary models as well.  The models would be `MsSqlDbUpdater`, `MsSqlDefinition`, and `MsSqlFunction`.
+---
+The `MsSqlFunction` model basically allows you to use the output from a user-defined function in SQL to 
+populate an ActiveRecord-like model.  These are read-only models, which fits in nicely with the output
+from a user-defined function.  There are 3 steps to using the `MsSqlFunction`.
+ 1. Inherit from `BarkestCore::MsSqlFunction`.
+ 2. Tell it what connection to use.
+ 3. Tell it the name of the user-defined function.
+
+```sql
+CREATE FUNCTION [my_function] (
+  @alpha INTEGER,
+  @bravo VARCHAR(100),
+  @charlie DATETIME
+) RETURNS TABLE AS RETURN
+SELECT
+  LEN(ISNULL(@bravo,'')) AS [bravo_len],
+  LEN(ISNULL(@bravo,'')) * ISNULL(@alpha,0) AS [alpha_bravo],
+  CONVERT(FLOAT, LEN(ISNULL(@bravo, ''))) / 100.0 AS [bravo_len_pct],
+  CONVERT(BIT, CASE
+    WHEN @alpha > 25 THEN 1
+    ELSE 0
+  END) AS [alpha_gt_25],
+  ISNULL(@alpha,0) AS [alpha],
+  ISNULL(@bravo,'') AS [bravo],
+  ISNULL(@charlie, GETDATE()) AS [charlie]
+```
+
+```ruby
+class MyFunction < BarkestCore::MsSqlFunction
+  use_connection 'ActiveRecord::Base'
+  self.function_name = 'my_function'
+end
+```
+
+Setting the function name causes the model to be built.  The name cannot be changed once set.
+After the model has been built, you can view the parameters, set their default values, view the columns, 
+and select from the function.
+
+```ruby
+MyFunction.parameters.inspect
+# "{ :alpha=>{ :type=>:integer, :data_type=>'integer' ... }, ... }"
+
+# Set some default parameter values.
+MyFunction.parameters = { :alpha => 10, :bravo => 'yes' }
+
+# The output from .parameters can be fed back into .parameters=, just set the :default keys.
+p = MyFunction.parameters
+p[:alpha][:default] = 10
+p[:bravo][:default] = 'yes'
+MyFunction.parameters = p
+
+MyFunction.columns.inspect
+# "{ { :name=>'bravo_len', :key=>:bravo_len, :data_type=>'int', :type=>:integer ...}, ...}"
+
+results = MyFunction.select( :alpha => 25, :bravo => 'Hello', :charlie => 5.days.ago )
+```
+
+---
+The `MsSqlDefinition` model is used primarily to load table, view, function, and procedure definitions
+for the `MsSqlDbUpdater` model.  If the source used to create the `MsSqlDefinition` model was for a 
+function, then the model will attempt to figure out the return value.  But other than that, it doesn't
+try to figure out what you're trying to do with the code.
+
+The `MsSqlDbUpdater` model is the model more likely to be used directly.  And the easiest way to use this
+model is to use the `MsSqlDbUpdater.register` method.
+
+```ruby
+updater = MsSqlDbUpdater.register(
+    :my_db,
+    :source_paths => [ 'sql/my_db' ],
+    :extra_params => {
+        :extra_1 => {
+            :name => 'some_connection_param',
+            :label => 'Enter a value for some connection param',
+            :type => 'text',
+            :value => 'my default'
+        }
+    },
+    :before_update => Proc.new do |db_conn, user|
+      ...
+    end,
+    :after_update => Proc.new do |db_conn, user|
+      ...
+    end
+)
+```
+
+Only the first parameter is required, that would be the database name.  The `source_paths` key would 
+define the paths to search for SQL files when the updater is created.  You can add more sources later
+using `add_source`, `add_source_definition`, and `add_source_path`.
+
+```ruby
+# Add one source to the updater.
+# The first param is a timestamp in the YYYYMMDDHHMM format.
+updater.add_source 201612121400, "CREATE VIEW [my_view] AS SELECT ..."
+
+# The definition can be created in any valid manner, this option allows for maximum
+# flexibility since you can tweak the actual definition going into the updater.
+# The third param is the timestamp here.
+my_def = MsSqlDefinition.new "CREATE VIEW [my_view] AS SELECT ...", nil, 201612121400
+updater.add_source_definition my_def
+
+# Just like in the constructor, search for all SQL files in the specified path.
+# Neither the `source_paths` constructor key not this method are recursive.
+# You need to add subdirectories individually.
+updater.add_source_path "sql/my_db"
+```
+
+The `extra_params` key allows you to specify up to 5 extra configuration parameters for this database's 
+connection.  Each extra param must have a name and type.  The label and value are optional, but recommended.
+
+The `type` could be "text", "password", "integer", "float", "boolean", or the special "in:" type.  The "in:"
+type allows you to specify a range of valid options for the parameter.
+
+```ruby
+    { :type => "in:MyCustomModel::VALID_EXTRA_PARAM_OPTIONS" }
+```
+
+The text after the "in:" will be evaluated and should return an enumerable object.
+
+The `before_update` and `after_update` callbacks are executed repectively before or after the update
+is performed.  The `db_conn` param is the current connection adapter.  The `user` param is the user executing
+the update.  The `before_update` and `after_update` callbacks can also reference a method defined elsewhere.
+
+```ruby
+    { :before_update => "MyCustomModel.before_db_update(db_conn, user)" }
+```
+
+The `MsSqlDbUpdater.register` method registers the database configuration with the system so that the 
+SystemConfigController can configure it, and also so that once it is configured the boot code can perform
+the update.
+
+It would be horrible to perform the update every time the app was started, which is where the timestamps
+come into play.  The system generates a unique version for each source file based on the timestamp and the
+CRC32 of the source contents.  The timestamps have a 1 minute resolution, and the CRC32 ensures the contents
+haven't changed.  The timestamps are the real determiner for whether the object needs updated or not.  The
+CRC32 would be just a quick check that everything is good.
+
+When using the source paths, the modified time for the files is used for the timestamps.  When adding the
+definition directly, you are providing the timestamp.
+
+Once an object is created, the unique version is stored for the object.  The next time the update runs, it 
+checks the stored version against the computed versions and only updates the objects it decides need to be
+updated.
+
+
+
 
 ## Contributing
 

@@ -8,11 +8,11 @@ module Barkest
 
     desc 'Installs the Barkest functionality into your application.'
 
-    argument :action, type: :string, default: '', desc: 'Specific action to run.'
+    argument :action_name, type: :string, default: '', desc: 'Specific action to run.'
 
 
     def install_modules
-      meth = action.to_s == '' ? nil : action.to_sym
+      meth = action_name.to_s == '' ? nil : action_name.to_sym
 
       installers.each do |inst|
         sep = '-' + ('=---' * 19) + '=-'

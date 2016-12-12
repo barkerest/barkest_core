@@ -15,6 +15,8 @@ module BarkestCore
   # a parameterized query.
   class MsSqlFunction
 
+    InvalidConnection = Class.new(StandardError)
+
     include ActiveModel::Model
     include ActiveModel::Validations
 
@@ -50,7 +52,7 @@ module BarkestCore
     #
     def self.connection
       conn = connection_handler.connection
-      raise StandardError.new('The connection must be to a SQL server.') unless conn.is_a?(ActiveRecord::ConnectionAdapters::SQLServerAdapter)
+      raise InvalidConnection unless conn.is_a?(ActiveRecord::ConnectionAdapters::SQLServerAdapter)
       conn
     end
 
