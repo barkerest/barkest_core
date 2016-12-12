@@ -65,7 +65,7 @@ module BarkestCore
       if (key = EXTRA_REGEX.match(m))
         if key['VAR'] == 'value'
           key = key['KEY'].to_i
-          if VALID_EXTRA_KEY.includ?(key)
+          if VALID_EXTRA_KEY.include?(key)
             ivar = :"@#{m}"
             val = instance_variable_defined?(ivar) ? instance_variable_get(ivar) : nil
             tp = send("extra_#{key}_type")
