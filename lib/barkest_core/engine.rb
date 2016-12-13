@@ -6,13 +6,13 @@ require 'exception_notification'
 module BarkestCore
   class Engine < ::Rails::Engine
 
-
     # Ensure the default logo gets compiled.
     config.assets.precompile += %w( barkest_core/barcode-B.svg
 barkest_core/ArchivoNarrow-Bold.ttf
 barkest_core/ArchivoNarrow-BoldItalic.ttf
 barkest_core/ArchivoNarrow-Italic.ttf
 barkest_core/ArchivoNarrow-Regular.ttf  )
+
 
     ##
     # Update the databases as needed.
