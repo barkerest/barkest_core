@@ -90,6 +90,10 @@ ActionDispatch::Routing::Mapper.class_eval do
         end
       end
 
+      # log view paths
+      get         'system_log'            => 'log_view#index', as: :system_log
+      post        'system_log'            => 'log_view#index'
+
     end
   end
 

@@ -1,0 +1,100 @@
+<% provide :title, 'System Log Viewer' %>
+<%
+  def record_class(record)
+    if record.level_id == 2
+      'warning'
+    elsif record.level_id > 2
+      'danger'
+    else
+      record.level.to_s.downcase + '-row'
+    end.html_safe
+  end
+%>
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h4 class="panel-title">System Log Viewer</h4>
+  </div>
+  <div class="panel-body">
+    <%= form_for @options, url: system_log_path, method: :post, html: { class: 'form-inline' } do |f| %>
+        <div class="form-group">
+          <label class="sr-only">Minimum Severity</label>
+          <div class="input-group">
+            <div class="input-group-addon">Severity</div>
+            <%= f.collection_select :min_severity, BarkestCore::LogEntry::SEVERITY_LIST, :to_s, :to_s, { include_blank: true}, { class: 'form-control' } %>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="sr-only">Start Time</label>
+          <%= f.date_picker_field :start_time, pre_label: 'Start Date', post_calendar: false %>
+        </div>
+        <div class="form-group">
+          <label class="sr-only">End Time</label>
+          <%= f.date_picker_field :end_time, pre_label: 'End Date', post_calendar: false %>
+        </div>
+        <div class="form-group">
+          <label class="sr-only">Search Text</label>
+          <div class="input-group">
+            <div class="input-group-addon">Find</div>
+            <%= f.text_field :search, class: 'form-control', placeholder: 'Any valid regex string', title: 'Remember to escape parenthesis, brackets, and literal special characters.' %>
+          </div>
+        </div>
+        <%= f.submit 'Refresh', class: 'btn btn-default' %>
+    <% end %>
+    <br>
+    <div class="center">
+      <strong>
+        <% if @log.blank? %>
+            No records found.
+        <% else %>
+            <%= @log.count %> record<%= @log.count > 1 ? 's' : '' %> found.
+            <% if @log.count > @options.max_records %>
+            Only showing the first <%= @options.max_records %>.
+            <% end %>
+        <% end %>
+      </strong>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="double-scroll" style="overflow-x: auto;">
+      <table class="table table-condensed">
+        <colgroup>
+          <col style="min-width: 72pt;" />
+          <col style="min-width: 72pt;" />
+          <col style="min-width: 72pt;" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Time</th>
+            <th>App</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% if @log.blank? %>
+            <tr>
+              <td colspan="4" style="text-align: center;">No Records Found</td>
+            </tr>
+        <% else %>
+            <% @log[0...@options.max_records].each do |rec| %>
+                <tr class="<%= record_class(rec) %>">
+                  <td><%= rec.level %></td>
+                  <td><%= rec.time.strftime('%Y-%m-%d %H:%M:%S') %></td>
+                  <td><%= rec.app_name %> v<%= rec.app_version %> PID:<%= rec.process_id %></td>
+                  <td><%= h(rec.message).gsub("\n", "<br>\n").html_safe %></td>
+                </tr>
+            <% end %>
+            <% if @log.count > @options.max_records %>
+                <tr>
+                  <td colspan="4" style="text-align: center;">
+                    <strong>Record<%= @log.count > (@options.max_records + 1) ? 's' : '' %> <%= (@options.max_records + 1) %> <%= @log.count > (@options.max_records + 1) ? "to #{@log.count}" : '' %> not shown.</strong>
+                  </td>
+                </tr>
+            <% end %>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

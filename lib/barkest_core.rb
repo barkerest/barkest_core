@@ -52,11 +52,21 @@ module BarkestCore
           defcfg = (other == :barkest_core) ? avail[env] : db_config_defaults(other)
 
           # Preference
+          (
           avail[key] ||                         # 1: barkest_core_development
-          avail[other] ||                       # 2: barkest_core
-          syscfg ||                             # 3: SystemConfig: barkest_core
-          defcfg ||                             # 4: YAML[env] or defaults depending on db name
-          ActiveRecord::Base.connection_config  # 5: default connection (hopefully never gets used)
+              avail[other] ||                       # 2: barkest_core
+              syscfg ||                             # 3: SystemConfig: barkest_core
+              defcfg ||                             # 4: YAML[env] or defaults depending on db name
+              ActiveRecord::Base.connection_config  # 5: default connection (hopefully never gets used)
+          ).merge(defcfg.select do |k,_|
+            [ # reset name, type, and label for extra values.
+                :extra_1_name, :extra_1_type, :extra_1_label,
+                :extra_2_name, :extra_2_type, :extra_2_label,
+                :extra_3_name, :extra_3_type, :extra_3_label,
+                :extra_4_name, :extra_4_type, :extra_4_label,
+                :extra_5_name, :extra_5_type, :extra_5_label
+            ].include?(k)
+          end)
         end
 
       @db_configs[key] = @db_configs[key].symbolize_keys

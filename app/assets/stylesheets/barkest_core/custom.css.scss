@@ -64,6 +64,24 @@ textarea {
   font-size: 50%;
 }
 
+.info {
+  background-color: $state-info-bg;
+  color: $state-info-text;
+}
+.warning {
+  background-color: $state-warning-bg;
+  color: $state-warning-text;
+}
+.danger {
+  background-color: $state-danger-bg;
+  color: $state-danger-text;
+}
+.success {
+  background-color: $state-success-bg;
+  color: $state-success-text;
+}
+
+
 /* typography */
 
 h1, h2, h3, h4, h5, h6 {
@@ -224,22 +242,6 @@ label.plain, div.plain-label label {
       float: right;
       max-width: 50%;
     }
-  }
-  li.info {
-    background-color: $state-info-bg;
-    color: $state-info-text;
-  }
-  li.warning {
-    background-color: $state-warning-bg;
-    color: $state-warning-text;
-  }
-  li.danger {
-    background-color: $state-danger-bg;
-    color: $state-danger-text;
-  }
-  li.success {
-    background-color: $state-success-bg;
-    color: $state-success-text;
   }
 }
 
