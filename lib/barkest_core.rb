@@ -34,7 +34,7 @@ module BarkestCore
   # * Fall back on default connection used by ActiveRecord::Base.
   #
   # Returned hash will have symbol keys.
-  def self.db_config(other = nil, env = nil)
+  def self.db_config(other = nil, env = nil, convert_extra = true)
     if other
       @db_configs ||= {}
 
@@ -53,7 +53,7 @@ module BarkestCore
 
           # Preference
           (
-          avail[key] ||                         # 1: barkest_core_development
+              avail[key] ||                         # 1: barkest_core_development
               avail[other] ||                       # 2: barkest_core
               syscfg ||                             # 3: SystemConfig: barkest_core
               defcfg ||                             # 4: YAML[env] or defaults depending on db name
@@ -68,12 +68,17 @@ module BarkestCore
             ].include?(k)
           end)
         end
+            .symbolize_keys
 
-      @db_configs[key] = @db_configs[key].symbolize_keys
+      if convert_extra
+        @db_configs[:"#{key}_converted"] ||= BarkestCore::DatabaseConfig.new(@db_configs[key]).to_h(true)
+      else
+        @db_configs[key]
+      end
     elsif env
-      db_config(:barkest_core, env)
+      db_config(:barkest_core, env, convert_extra)
     else
-      @db_config ||= db_config(:barkest_core, Rails.env)
+      @db_config ||= db_config(:barkest_core, Rails.env, false)
     end
   end
 

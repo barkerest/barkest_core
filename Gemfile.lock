@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (1.2.0.0)
+    barkest_core (1.2.0.1)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       barkest_ssh (>= 1.1.12)
@@ -72,7 +72,7 @@ GEM
       tzinfo (~> 1.1)
     ansi (1.5.0)
     arel (6.0.3)
-    autoprefixer-rails (6.5.3.1)
+    autoprefixer-rails (6.5.4)
       execjs
     axlsx (2.0.1)
       htmlentities (~> 4.3.1)
@@ -104,7 +104,7 @@ GEM
     coffee-script (2.4.1)
       coffee-script-source
       execjs
-    coffee-script-source (1.11.1)
+    coffee-script-source (1.12.2)
     concurrent-ruby (1.0.2)
     debug_inspector (0.0.2)
     encrypted_strings (0.3.3)

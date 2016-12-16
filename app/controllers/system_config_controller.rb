@@ -108,7 +108,7 @@ class SystemConfigController < ApplicationController
   ##
   # GET /system_config/database/db_name
   def show_database
-    @db_config = BarkestCore::DatabaseConfig.new(@db_id, BarkestCore.db_config(@db_id))
+    @db_config = BarkestCore::DatabaseConfig.new(@db_id, BarkestCore.db_config(@db_id, nil, false))
   end
 
   ##
