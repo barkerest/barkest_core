@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class LogViewAccessTest < ActionDispath::IntegrationTest
+class LogViewAccessTest < ActionDispatch::IntegrationTest
 
   access_tests_for :index,
                    controller: 'log_view',
