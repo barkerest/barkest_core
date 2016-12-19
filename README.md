@@ -126,7 +126,7 @@ decrypted.
 
 ---
 Because I generally have a need to interface with MS SQL for reporting purposes, I decided to build the
-necessary models as well.  The models would be `MsSqlDbUpdater`, `MsSqlDefinition`, and `MsSqlFunction`.
+necessary models as well.  The models would be `MsSqlDbDefinition`, `MsSqlDefinition`, and `MsSqlFunction`.
 ---
 The `MsSqlFunction` model basically allows you to use the output from a user-defined function in SQL to 
 populate an ActiveRecord-like model.  These are read-only models, which fits in nicely with the output
@@ -186,15 +186,15 @@ results = MyFunction.select( :alpha => 25, :bravo => 'Hello', :charlie => 5.days
 
 ---
 The `MsSqlDefinition` model is used primarily to load table, view, function, and procedure definitions
-for the `MsSqlDbUpdater` model.  If the source used to create the `MsSqlDefinition` model was for a 
+for the `MsSqlDbDefinition` model.  If the source used to create the `MsSqlDefinition` model was for a 
 function, then the model will attempt to figure out the return value.  But other than that, it doesn't
 try to figure out what you're trying to do with the code.
 
-The `MsSqlDbUpdater` model is the model more likely to be used directly.  And the easiest way to use this
-model is to use the `MsSqlDbUpdater.register` method.
+The `MsSqlDbDefinition` model is the model more likely to be used directly.  And the easiest way to use this
+model is to use the `MsSqlDbDefinition.register` method.
 
 ```ruby
-updater = MsSqlDbUpdater.register(
+updater = MsSqlDbDefinition.register(
     :my_db,
     :source_paths => [ 'sql/my_db' ],
     :extra_params => {
@@ -255,7 +255,7 @@ the update.  The `before_update` and `after_update` callbacks can also reference
     { :before_update => "MyCustomModel.before_db_update(db_conn, user)" }
 ```
 
-The `MsSqlDbUpdater.register` method registers the database configuration with the system so that the 
+The `MsSqlDbDefinition.register` method registers the database configuration with the system so that the 
 SystemConfigController can configure it, and also so that once it is configured the boot code can perform
 the update.
 

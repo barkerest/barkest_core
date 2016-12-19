@@ -6,7 +6,7 @@ module BarkestCore
   # For each source, the updater calculates the new version and compares it against the
   # existing version.  If the new version is actually newer, the updater will update the
   # object in the database.
-  class MsSqlDbUpdater
+  class MsSqlDbDefinition
 
     ##
     # The base error for errors raised by the updater class.
@@ -39,7 +39,7 @@ module BarkestCore
     # The +before_update+ and +after_update+ options define a callback to be run before or after
     # the database update is performed.  This can be a string referencing a method or it can be a Proc.
     #
-    #   MsSqlDbUpdater.new(
+    #   MsSqlDbDefinition.new(
     #     :before_update => 'MyClass.my_method(db_conn,user)',
     #     :after_update => Proc.new do |db_conn, user|
     #                        ...
@@ -255,7 +255,7 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
     ##
     # Registers a DB updater and tells BarkestCore that the named database exists and could use a configuration.
     #
-    # The +options+ will be passed to the MsSqlDbUpdater constructor, except for the +extra_params+ key.
+    # The +options+ will be passed to the MsSqlDbDefinition constructor, except for the +extra_params+ key.
     # If this key is provided, it is pulled out and used for the defaults for the database configuration.
     #
     # Ideally this is to provide the +extra_[1|2]_name+, +extra_[1|2]_type+, and +extra_[1|2]_value+ parameters, but
@@ -292,7 +292,7 @@ CREATE TABLE [#{VERSION_TABLE_NAME}] (
             "zz_barkest_#{name}_"
           end
 
-      updater = MsSqlDbUpdater.new(options)
+      updater = MsSqlDbDefinition.new(options)
 
       registered[name] = updater
 

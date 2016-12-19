@@ -40,7 +40,7 @@ EOPROC
     end
 
     test 'should be able to update MSSQL db' do
-      updater = ::BarkestCore::MsSqlDbUpdater.new
+      updater = ::BarkestCore::MsSqlDbDefinition.new
 
       # add the sources.
       TEST_DEFS.each do |test_def|
@@ -54,19 +54,19 @@ EOPROC
             cfg,
             before_update: Proc.new do |conn,user|
               assert_equal cfg[:username], user
-              cntr = conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}]").first['cnt']
+              cntr = conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}]").first['cnt']
               updater.sources.each do |src|
-                assert_equal 0, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}] WHERE [object_name]='#{src.prefixed_name}'").first['cnt']
+                assert_equal 0, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}] WHERE [object_name]='#{src.prefixed_name}'").first['cnt']
                 assert_not conn.object_exists?(src.prefixed_name)
               end
             end,
             after_update: Proc.new do |conn,_|
-              assert_equal cntr + TEST_DEFS.count, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}]").first['cnt']
+              assert_equal cntr + TEST_DEFS.count, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}]").first['cnt']
               updater.sources.each do |src|
-                assert_equal 1, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}] WHERE [object_name]='#{src.prefixed_name}'").first['cnt']
+                assert_equal 1, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}] WHERE [object_name]='#{src.prefixed_name}'").first['cnt']
                 assert conn.object_exists?(src.prefixed_name)
               end
-              assert_not_equal 0, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}]").first['cnt']
+              assert_not_equal 0, conn.exec_query("SELECT COUNT(*) AS [cnt] FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}]").first['cnt']
               assert_equal 1, conn.exec_query("SELECT [one] FROM [#{updater.object_name 'something'}]").first['one']
               assert_equal 'abc', conn.exec_query("SELECT [two] FROM [#{updater.object_name 'something'}]").first['two']
               assert_equal 20, conn.exec_query("SELECT [result] FROM [#{updater.object_name 'multiply'}](4, 5)").first['result']
@@ -87,7 +87,7 @@ EOPROC
             end
         )
 
-      rescue ::BarkestCore::MsSqlDbUpdater::NeedFullAccess => e
+      rescue ::BarkestCore::MsSqlDbDefinition::NeedFullAccess => e
         skip "Invalid test MSSQL configuration: #{e.message}"
       ensure
         begin
@@ -96,7 +96,7 @@ EOPROC
           conn = CleanupConn.connection
           updater.sources.reverse.each do |test_def|
             begin
-              conn.execute "DELETE FROM [#{::BarkestCore::MsSqlDbUpdater::VERSION_TABLE_NAME}] WHERE [object_name]='#{test_def.prefixed_name}'" rescue nil
+              conn.execute "DELETE FROM [#{::BarkestCore::MsSqlDbDefinition::VERSION_TABLE_NAME}] WHERE [object_name]='#{test_def.prefixed_name}'" rescue nil
               conn.execute test_def.drop_sql rescue nil
             rescue =>e
               nil

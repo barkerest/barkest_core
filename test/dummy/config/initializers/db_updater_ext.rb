@@ -1,4 +1,4 @@
-BarkestCore::MsSqlDbUpdater.register(
+BarkestCore::MsSqlDbDefinition.register(
     'fake',
     before_update: Proc.new do |db_conn,user|
       STDOUT.puts 'Before we update the fake DB.'
