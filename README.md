@@ -272,7 +272,37 @@ Once an object is created, the unique version is stored for the object.  The nex
 checks the stored version against the computed versions and only updates the objects it decides need to be
 updated.
 
+---
+#### DateTime Handling
 
+I find that I have to accurately work with Dates and Times frequently.  A common problem I had on a previous project
+was "TimeZone Interference".  This was only a problem with user provided dates/times.  For instance, a user enters
+an employee's hire date as '2000-10-15', ActiveRecord parses that according to the local time zone (-0500) so we have
+'2000-10-15 00:00:00 -0500' which becomes '2000-10-16 05:00:00 UTC' when stored.  So far, not really a problem if we 
+work solely in one time zone, big problem if we start working across time zones.
+
+So I implemented a few changes.  `Date.to_time` returns UTC.  `Date.today.to_time` used to return TimeZoned values, 
+not with this gem.  `Date.today.to_time` returns '2000-01-01 00:00:00 UTC'.  In my mind, a date should not be time zoned.
+I also added a `Time.date` method that returns the date with the time stripped off.  The time will be converted to UTC
+first and then a date in UTC is returned.  So '2000-01-01 22:00:00 -0500'.date == '2000-01-02 00:00:00 UTC'.
+
+The `Time.utc_parse` static method is a parser capable of parsing either Y-M-D or M/D/Y dates, supports AM/PM values and time
+zone offsets.  The returned time is always UTC.
+
+The `Time.as_utc` method strips the time zone info from a time and simply returns a UTC time with the same raw values.
+This can be useful in some instances, but unlike other methods the returned value does not equal the source value unless
+the source value was also in UTC.
+
+So, that's all great, but what about the real crux: ActiveRecord.  Well, it actually wasn't too hard.  After tracing my
+way through the ActiveRecord::Base class, and looking at the included modules, it became clear where I needed to make
+a change.  ActiveRecord::Base includes the TimeZoneConversion module.  I wrote up the UtcConversion module to replace
+and disable the TimeZoneConversion module, and then included it into ActiveRecord::Base.  The UtcConverter class used
+to convert :datetime values simply runs all values past Time.utc_parse.
+
+So what does all of this do for me?  All handling of dates and times is done in UTC, _as it should be_.  This avoids 
+mistakes due to time zone offsets and only adds one level of hinderance.  If you want to show the user a localtime,
+you have to call the `in_time_zone` method on the time value.  This will return a Rails TimeWithZone under your 
+configured time zone, which you can then display to the user.
 
 
 ## Contributing

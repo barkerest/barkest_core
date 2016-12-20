@@ -32,7 +32,7 @@ class ReportsTest < ActionDispatch::IntegrationTest
 
     assert_equal 'application/pdf', response.content_type.to_s
 
-    valid_sha1 = 'c1ac3a26f2b8921bcdaaaf4706a9b19e836c4a41'
+    valid_sha1 = '5aba48603c5e93674e67022b38524dd5d1a953c4'
     computed_sha1 = Digest::SHA1.hexdigest(response.body)
     assert_equal valid_sha1, computed_sha1
   end
@@ -44,7 +44,7 @@ class ReportsTest < ActionDispatch::IntegrationTest
 
     assert_equal 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response.content_type.to_s
 
-    valid_sha1 = 'a2762fe40b5b8e7c513408bfcaec8c247e946ff6'
+    valid_sha1 = 'e6292ab2ea16a209ccd985a00d823d15c6c6a947'
     computed_sha1 = Digest::SHA1.hexdigest(response.body)
     assert_equal valid_sha1, computed_sha1
   end

@@ -62,8 +62,8 @@ class TestReportController < ApplicationController
           code: 'SMIJOH',
           name: 'John Smith',
           email: 'j.smith@example.com',
-          date_of_birth: Time.zone.local(1980, 1, 1),
-          hire_date: Time.zone.local(2010, 5, 1),
+          date_of_birth: Time.utc(1980, 1, 1),
+          hire_date: Time.utc(2010, 5, 1),
           pay_rate: 15.50,
           hours: 2260
       )

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (1.2.0.2)
+    barkest_core (1.3.0.0)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       barkest_ssh (>= 1.1.12)

@@ -37,17 +37,17 @@
     <% if user.enabled? %>
         <% if user.failed_login_streak.count > 1 %>
             Failed Login Streak: <%= user.failed_login_streak.count %><br />
-            Most Recent Attempt: <%= user.last_failed_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
+            Most Recent Attempt: <%= user.last_failed_login.created_at.in_time_zone.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
         <% elsif user.failed_login_streak.count == 1 %>
-            Failed Login Attempt: <%= user.last_failed_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
+            Failed Login Attempt: <%= user.last_failed_login.created_at.in_time_zone.strftime('%m/%d/%Y') %> from <%= user.last_failed_login.ip_address %><br />
         <% end %>
         <% if user.last_successful_login %>
-            Most Recent Login: <%= user.last_successful_login.created_at.strftime('%m/%d/%Y') %> from <%= user.last_successful_login.ip_address %>
+            Most Recent Login: <%= user.last_successful_login.created_at.in_time_zone.strftime('%m/%d/%Y') %> from <%= user.last_successful_login.ip_address %>
         <% else %>
             Most Recent Login: Never
         <% end %>
     <% else %>
-        Disabled <%= user.disabled_at ? user.disabled_at.strftime('%m/%d/%Y') : 'some time in the past' %> by <%= user.disabled_by ? user.disabled_by.name : 'Unknown User' %>.<br />
+        Disabled <%= user.disabled_at ? user.disabled_at.in_time_zone.strftime('%m/%d/%Y') : 'some time in the past' %> by <%= user.disabled_by ? user.disabled_by.name : 'Unknown User' %>.<br />
         <%= user.disabled_reason %>
     <% end %>
   </p>

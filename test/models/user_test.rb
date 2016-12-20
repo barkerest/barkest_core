@@ -93,4 +93,38 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.authenticated?(:remember, '')
   end
 
+  test 'datetime overrides are in place' do
+    # we're just picking one attribute to test: 'activated_at'
+    # in the User model, this attribute is given no special care and is in fact defaulted to Time.zone.now.
+    # we want to ensure that values coming out of ActiveRecord are always UTC.
+    [
+        # valid with both TimeZoneConversion and UtcConversion
+        'Time.now',
+        'Time.zone.now',
+        '"2016-12-19"',
+        '"2016-12-19 15:45"',
+
+        # valid with UtcConversion only.
+        'Date.today',
+        '"12/19/2016"',
+        '"12/19/2016 3:45 pm"',
+
+    ].each do |item|
+      val = eval(item)
+
+      # set the value then save/load to ensure we read the value from the database.
+      @user.activated_at = val
+      @user.save!
+      @user.reload
+
+      # basic checks.
+      assert_not_nil @user.activated_at,        "Failed to set to #{item}"
+      assert @user.activated_at.is_a?(Time),    "#{item} not converted to Time"
+      assert @user.activated_at.utc?,           "#{item} not returned in UTC"
+
+      # finally an equality check (based on total seconds since the unix epoch)
+      assert_equal Time.utc_parse(val).tv_sec,  @user.activated_at.tv_sec
+    end
+  end
+
 end

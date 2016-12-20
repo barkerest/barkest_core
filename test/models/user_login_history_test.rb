@@ -28,4 +28,10 @@ class UserLoginHistoryTest < ActiveSupport::TestCase
     assert_max_length @item, :message, 200
   end
 
+  test 'timestamps should be in utc' do
+    @item.save!
+    assert @item.created_at.utc?
+    assert @item.updated_at.utc?
+  end
+
 end

@@ -30,7 +30,7 @@
         <% if hist && hist.count > 0 %>
             <% hist.each do |rec| %>
                 <tr>
-                  <td><%= rec.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+                  <td><%= rec.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M:%S") %></td>
                   <td><%= rec.ip_address %></td>
                   <td><%= check_if rec.successful %></td>
                   <td><%= rec.message %></td>

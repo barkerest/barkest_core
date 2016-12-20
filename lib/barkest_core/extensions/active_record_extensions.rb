@@ -90,6 +90,7 @@ ActiveRecord::Base.class_eval do
     end
   end
 
+  # patch 'connection'  so that we can insert our extensions to the returned adapters.
   class << self
     # :nodoc:
     alias_method :barkest_core_original_connection, :connection
