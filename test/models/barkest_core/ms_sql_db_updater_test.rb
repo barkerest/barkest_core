@@ -44,7 +44,7 @@ EOPROC
 
       # add the sources.
       TEST_DEFS.each do |test_def|
-        updater.add_source 20161028, test_def
+        updater.add_source "-- #{Date.today.strftime('%Y-%m-%d')}\n" + test_def
       end
 
       cfg = BarkestCore.db_config(:ms_sql_test)
