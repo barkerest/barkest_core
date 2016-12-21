@@ -220,18 +220,23 @@ using `add_source`, `add_source_definition`, and `add_source_path`.
 
 ```ruby
 # Add one source to the updater.
-# The first param is a timestamp in the YYYYMMDDHHMM format.
-updater.add_source 201612121400, "CREATE VIEW [my_view] AS SELECT ..."
+# The first comment should define the timestamp for the source.
+updater.add_source "-- 2016-12-19\nCREATE VIEW [my_view] AS SELECT ..."
 
 # The definition can be created in any valid manner, this option allows for maximum
 # flexibility since you can tweak the actual definition going into the updater.
-# The third param is the timestamp here.
+# The third param is the timestamp here, but it can also be included in the source directly.
+# Note that the timestamp is an integer number here.
 my_def = MsSqlDefinition.new "CREATE VIEW [my_view] AS SELECT ...", nil, 201612121400
 updater.add_source_definition my_def
 
 # Just like in the constructor, search for all SQL files in the specified path.
 # Neither the `source_paths` constructor key not this method are recursive.
 # You need to add subdirectories individually.
+# The source files should set the timestamp in the first comment as shown above.
+# If they don't then they will use the file modification time.  Since git doesn't
+# track the modification time, this essentially becomes the project's creation time
+# so it would be best to include the comments.
 updater.add_source_path "sql/my_db"
 ```
 

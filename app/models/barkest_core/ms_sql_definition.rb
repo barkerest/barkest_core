@@ -30,30 +30,40 @@ module BarkestCore
 
     attr_reader :command, :name, :type, :definition, :version, :return_type, :source_location
 
-    def initialize(raw_sql, source = '', timestamp = 0)
+    def initialize(raw_sql, source = '', default_timestamp = 0)
 
       @source_location = source.to_s
       @return_type = :table  # the default.  functions can be different.  procedures can be iffy since they may or may not return a result set.
       @command = 'CREATE'
 
-      if timestamp.is_a?(String)
-        timestamp = Time.new(timestamp)
+      if default_timestamp.is_a?(String)
+        default_timestamp = Time.utc_parse(default_timestamp)
       end
 
-      if timestamp.is_a?(Date)
-        timestamp = "#{timestamp.year.to_s.rjust(4,'0')}#{timestamp.month.to_s.rjust(2,'0')}#{timestamp.day.to_s.rjust(2,'0')}0000".to_i
-      elsif timestamp.is_a?(Time)
-        timestamp = "#{timestamp.year.to_s.rjust(4,'0')}#{timestamp.month.to_s.rjust(2,'0')}#{timestamp.day.to_s.rjust(2,'0')}#{timestamp.hour.to_s.rjust(2,'0')}#{timestamp.min.to_s.rjust(2,'0')}".to_i
+      if default_timestamp.is_a?(Date)
+        default_timestamp = (default_timestamp.strftime('%Y%m%d') + '0000').to_i
+      elsif default_timestamp.is_a?(Time)
+        default_timestamp = "#{default_timestamp.year.to_s.rjust(4,'0')}#{default_timestamp.month.to_s.rjust(2,'0')}#{default_timestamp.day.to_s.rjust(2,'0')}#{default_timestamp.hour.to_s.rjust(2,'0')}#{default_timestamp.min.to_s.rjust(2,'0')}".to_i
       end
 
-      timestamp = 0 unless timestamp.is_a?(Fixnum)
+      default_timestamp = 0 unless default_timestamp.is_a?(Fixnum)
+
+      ts_regex = /^--\s*(?<YR>\d{4})-?(?<MON>\d{2})-?(?<DAY>\d{2})\s*(?:(?<HR>\d{2}):?(?<MIN>\d{2})?)?\s*$/
+
+      timestamp = nil
 
       raw_sql = raw_sql.to_s.lstrip
       # strip leading comment lines.
       while raw_sql[0...2] == '--' || raw_sql[0...2] == '/*'
         if raw_sql[0...2] == '--'
           # trim off the first line.
-          raw_sql = raw_sql.partition("\n")[2].to_s.lstrip
+          first_line,_,raw_sql = raw_sql.partition("\n").map {|v| v.strip}
+          raw_sql ||= ''
+          unless timestamp
+            if (ts = ts_regex.match(first_line))
+              timestamp = "#{ts['YR']}#{ts['MON']}#{ts['DAY']}#{ts['HR'] || '00'}#{ts['MIN'] || '00'}".to_i
+            end
+          end
         else
           # find the first */ sequence in the string.
           comment_end = raw_sql.index('*/')
@@ -66,6 +76,8 @@ module BarkestCore
           raw_sql = (raw_sql[0...comment_start].to_s + raw_sql[(comment_end + 2)..-1].to_s).lstrip
         end
       end
+
+      timestamp ||= default_timestamp
 
       raise EmptyDefinition, 'raw_sql contains no data' if raw_sql.blank?
 

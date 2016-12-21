@@ -100,13 +100,18 @@ module BarkestCore
     ##
     # Adds a source using a specific timestamp.
     #
-    # The +timestamp+ should be in the form YYYYMMDDHHMM, but will be right-padded with zeroes to fill out the full
-    # width if you only specify part.
-    #   20161209 => 201612090000
+    # The first line of the SQL should be a comment specifying the timestamp for the source.
+    #   -- 2016-12-19 15:45
+    #   -- 2016-12-19
+    #   -- 201612191545
+    #   -- 20161219
+    #
+    # The timestamp will be converted into a 12-digit number, if time is not specified it will be right-padded
+    # with zeroes to get to the 12-digit number.
     #
     # The +sql+ should be a valid create/alter table/view/function statement.
-    def add_source(timestamp, sql)
-      sql_def = BarkestCore::MsSqlDefinition.new(sql, '', timestamp)
+    def add_source(sql)
+      sql_def = BarkestCore::MsSqlDefinition.new(sql, '')
       sql_def.instance_variable_set(:@source_location, "::#{sql_def.name}::")
       add_sql_def sql_def
       nil
@@ -126,6 +131,16 @@ module BarkestCore
     #
     # The +path+ should contain the SQL files.  If there are subdirectories, you should
     # include them individually.
+    #
+    # The source files should specify a timestamp in the first comment.
+    #   -- 2016-12-19 15:45
+    #   -- 2016-12-19
+    #   -- 201612191545
+    #   -- 20161219
+    #
+    # The timestamp will be converted into a 12-digit number, if time is not specified it will be right-padded
+    # with zeroes to get to the 12-digit number.
+    #
     def add_source_path(path)
       raise 'path must be a string' unless path.is_a?(String)
 
