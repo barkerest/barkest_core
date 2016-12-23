@@ -224,6 +224,44 @@ class User < ::BarkestCore::DbTable
         end
   end
 
+  def settings(reload = false)
+    @settings = nil if reload
+    @settings ||=
+        begin
+          h = SystemConfig.get("user_#{id}") || {}
+          h.instance_variable_set :@user_id, id
+
+          def h.save
+            SystemConfig.set "user_#{@user_id}", self
+          end
+
+          def h.method_missing(m,*a,&b)
+            x = (/^([A-Z][A-Z0-9_]*)(=)?$/i).match(m.to_s)
+            if x
+              key = x[1].to_sym
+              if x[2] == '='
+                val = a ? a.first : nil
+                self[key] = val
+                return val
+              else
+                return self[key]
+              end
+            end
+            super m, *a, &b
+          end
+
+          def h.[](key)
+            super key.to_sym
+          end
+
+          def h.[]=(key, value)
+            super key.to_sym, value
+          end
+
+          h
+        end
+  end
+
   ##
   # Sends the password reset email to the user.
   def send_password_reset_email(client_ip = '0.0.0.0')
