@@ -89,6 +89,12 @@ module BarkestCore
     #     Valid optional sizes are 'small' or 'large'.
     # *   +readonly+
     #     Set to true to make the input field read only.
+    # *   +width+
+    #     Set to any value to set the width of the overall field in percent.  Default is 100%.
+    # *   +width_1+ ... +width_N+
+    #     Set the width of the child field to a specific percent. Defaults to equal amount for all children.
+    # *   +placeholder_1+ ... +placeholder_N+
+    #     Set the placeholder of the child field.  Defaults to the method name.
     def multi_input_field(f, methods, options = {})
       raise ArgumentError.new('methods must respond to :count') unless methods.respond_to?(:count)
 
@@ -109,6 +115,8 @@ module BarkestCore
         end
       end
 
+      options[:input_group_width] ||= 'width: 100%;'
+
       attrib = options[:attrib_val]
       attrib[:class] = options[:class]
       attrib[:readonly] = 'readonly' if options[:read_only]
@@ -126,22 +134,34 @@ module BarkestCore
       remaining_width = 100.0
       width = (100.0 / methods.count).round(2)
 
-      builder = Proc.new do |method,label|
-        width = remaining_width if width > remaining_width
+      builder = Proc.new do |method,label,index|
+        num = index + 1
+        # if user specified width, use it.
+        width = options[:"width_#{num}"].to_s.to_f
+
+        # otherwise compute the width.
+        if width <= 0
+          width = (remaining_width / (methods.count - index)).round(2)
+          width = remaining_width if width > remaining_width || index == methods.count - 1
+        end
+
         remaining_width -= width
         attrib[:style] = style + "width: #{width}%;"
         attrib[:value] = f.object.send(method)
-        attrib[:placeholder] = label.blank? ? method.to_s.humanize : label
+
+        ph = options[:"placeholder_#{num}"] || (label.blank? ? method.to_s.humanize : label)
+        attrib[:placeholder] = ph
+
         fld << f.text_field(method, attrib)
       end
 
       if methods.is_a?(Array)
-        methods.each do |method|
-          builder.call method, method.to_s.humanize
+        methods.each_with_index do |method, index|
+          builder.call method, method.to_s.humanize, index
         end
       elsif methods.is_a?(Hash)
-        methods.each do |method,label|
-          builder.call method, label.to_s
+        methods.each_with_index do |(method,label), index|
+          builder.call method, label.to_s, index
         end
       else
         raise ArgumentError.new('methods must either be an array or a hash')
