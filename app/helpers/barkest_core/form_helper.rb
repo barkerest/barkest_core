@@ -152,6 +152,19 @@ module BarkestCore
         ph = options[:"placeholder_#{num}"] || (label.blank? ? method.to_s.humanize : label)
         attrib[:placeholder] = ph
 
+        options.each do |opt_key, opt_val|
+          attr_key,_,fld_num = opt_key.to_s.rpartition('_')
+          if fld_num.to_i == num
+            unless %w(value width placeholder).include?(attr_key)
+              if %w(class style).include?(attr_key)
+                attrib[:class] += ' ' + opt_val.to_s
+              else
+                attrib[attr_key.to_sym] = opt_val.to_s
+              end
+            end
+          end
+        end
+
         fld << f.text_field(method, attrib)
       end
 
