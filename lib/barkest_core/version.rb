@@ -1,3 +1,3 @@
 module BarkestCore
-  VERSION = '1.4.0.4'
+  VERSION = '1.4.1.0'
 end
