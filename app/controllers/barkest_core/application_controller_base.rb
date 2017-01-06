@@ -4,6 +4,8 @@ module BarkestCore
   # The application's ApplicationController should inherit from this.
   class ApplicationControllerBase < ActionController::Base
 
+
+
     include BarkestCore::SessionsHelper
     include BarkestCore::RecaptchaHelper
     include BarkestCore::StatusHelper
@@ -34,11 +36,8 @@ module BarkestCore
         unless logged_in?
           store_location
 
-          raise_authorize_failure "You need to login to access '#{request.fullpath}'.",
-                                  'nobody is logged in',
-                                  false
-
-          redirect_to login_url and return false
+          raise_not_logged_in "You need to login to access '#{request.fullpath}'.",
+                              'nobody is logged in'
         end
 
         # clean up the group list.
@@ -85,13 +84,27 @@ module BarkestCore
       true
     end
 
+    rescue_from NotLoggedIn do |exception|
+      flash[:info] = exception.message
+      redirect_to login_url
+    end
+
 
     private
 
-    def raise_authorize_failure(message, log_message = nil, raise_error = true)
+    def raise_authorize_failure(message, log_message = nil)
+      log_authorize_failure message, log_message
+      raise BarkestCore::AuthorizeFailure.new(message)
+    end
+
+    def raise_not_logged_in(message, log_message = nil)
+      log_authorize_failure message, log_message
+      raise BarkestCore::NotLoggedIn.new(message)
+    end
+
+    def log_authorize_failure(message, log_message = nil)
       log_message ||= message
       Rails.logger.info "AUTH(FAILURE): #{request.fullpath}, #{current_user}, #{message}"
-      raise BarkestCore::AuthorizeFailure.new(message) if raise_error
     end
 
     def log_authorize_success(message)
