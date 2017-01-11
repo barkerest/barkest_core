@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (1.4.1.0)
+    barkest_core (1.5.0.0)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
       barkest_ssh (>= 1.1.12)
@@ -249,4 +249,4 @@ DEPENDENCIES
   web-console
 
 BUNDLED WITH
-   1.13.1
+   1.13.7

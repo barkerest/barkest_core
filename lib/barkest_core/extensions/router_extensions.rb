@@ -33,6 +33,11 @@ ActionDispatch::Routing::Mapper.class_eval do
           get     'test_access/require_admin'
           get     'test_access/require_group_x'
           get     'test_report' => 'test_report#index'
+
+          # namespaced tests (these should have the subheader in place).
+          get     'test_sub' => 'barkest_core/testsub#page1', as: :testsub_page1
+          get     'test_sub/page2' => 'barkest_core/testsub#page2', as: :testsub_page2
+          get     'test_sub/page3' => 'barkest_core/testsub#page3', as: :testsub_page3
         end
       end
 

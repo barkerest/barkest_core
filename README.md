@@ -52,7 +52,9 @@ layouts as default, but you can easily use your own layouts.
 
 ---
 There are a few special layouts you can create to modify parts of the layout easily.  Create these files in your
-__views/layouts__ folder to have them get used automatically.  Use the _ prefixed notation.   
+__views/layouts__ folder to have them get used automatically.  These views will override
+the default views for the library.  See the next two sections for other ways to customize the application.  
+Use the _ prefixed notation.  
 ie: "_nav_logo.html.erb" for "nav_logo"
 
 *   __nav_logo__ Defines the logo in the top left corner of the webpage.  This should be an image tag inside of
@@ -71,6 +73,43 @@ ie: "_nav_logo.html.erb" for "nav_logo"
     adjusted on a per-project basis since it defines the menu for users.  
     Menus would be `<li>...</li>` items.  The container `<ul>...</ul>` is defined in the parent view.
    
+---
+**Namespaced Partials**
+
+If you are designing a gem based on this gem, and you are namespacing your controllers, you can make use of this 
+automatic behavior.
+
+Let's say your controller is MyNamespace::MySpecialController.  Your route might be 'my_special/action'.  The router
+should define the parameter 'controller' to be 'my_namespace/my_special'.  The default layouts look for this format
+and then try to include some namespaced partials automatically.
+
+The _menu_auth_, _menu_anon_, _menu_footer_, and _subheader_ partials are looked for automatically.  The _menu_footer_
+partial is just like _menu_auth_ and _menu_anon_ except it goes in the footer.
+
+The __subheader__ partial is specific to namespaced controllers.  This partial gets rendered immediately after the 
+header before any messages.  This allows you to define navigation tokens for your gem that won't interfere with the
+rest of the application.  Although you are free to use the partial for anything else you might want to stick right
+under the main menu bar.
+
+The _menu_auth_ and _menu_anon_ partials are rendered after the default partials.  The _menu_footer_ partial is rendered
+before the default partials.
+
+All of these partials are stored under 'layouts/{namespace}'.  So in our example, we would create 
+'views/layouts/my_namespace/menu_auth' and include related commands in the main menu.  These commands would only be
+included while we are in the namespace, see the next section about registering views.
+
+---
+**Registered Partials**
+
+You may want to add to the main menu when your gem is loaded to make navigating to your gem's controllers easier.
+BarkestCore now includes methods to register partials to do just that.
+
+`BarkestCore.register_anon_menu`, `BarkestCore.register_auth_menu`, and `BarkestCore.register_footer_menu` register
+partials to be rendered in those three menu locations.  The _anon_ and _footer_ menus are always rendered, while the
+_auth_ menu is only rendered once a user is authenticated.  The _anon_ and _auth_ menus are rendered in the order of
+registration.  The _footer_ menus are rendered in reverse order.
+
+
 ---
 Utility models are namespaced.  These include the `UserManager` (which you shouldn't need to use directly), `WorkPath`,
 `GlobalStatus`, and `PdfTableBuilder` classes, among others.
@@ -308,6 +347,9 @@ So what does all of this do for me?  All handling of dates and times is done in 
 mistakes due to time zone offsets and only adds one level of hinderance.  If you want to show the user a localtime,
 you have to call the `in_time_zone` method on the time value.  This will return a Rails TimeWithZone under your 
 configured time zone, which you can then display to the user.
+
+
+
 
 
 ## Contributing

@@ -3,7 +3,10 @@
     <%= render 'layouts/footer_copyright' %>
     <nav>
       <ul>
-        <%= render 'layouts/menu_footer' %>
+        <%= render_for_namespace 'menu_footer' %>
+        <% BarkestCore.send(:footer_menu_registry).reverse.each do |partial| %>
+            <%= render partial rescue nil %>
+        <% end %>
       </ul>
     </nav>
   </footer>

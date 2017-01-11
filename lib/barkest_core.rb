@@ -228,7 +228,43 @@ module BarkestCore
     key_gem_patterns.include? pattern
   end
 
+  ##
+  # Registers a partial view to build up the anonymous header menu.
+  def self.register_anon_menu(partial_path)
+    unless partial_path.blank?
+      anon_menu_registry << partial_path unless anon_menu_registry.include?(partial_path)
+    end
+  end
+
+  ##
+  # Registers a partial view to build up the authenticated header menu.
+  def self.register_auth_menu(partial_path)
+    unless partial_path.blank?
+      auth_menu_registry << partial_path unless auth_menu_registry.include?(partial_path)
+    end
+  end
+
+  ##
+  # Registers a partial view to build up the footer menu.
+  def self.register_footer_menu(partial_path)
+    unless partial_path.blank?
+      footer_menu_registry << partial_path unless footer_menu_registry.include?(partial_path)
+    end
+  end
+
   private
+
+  def self.anon_menu_registry
+    @anon_menu_registry ||= [ 'layouts/menu_anon' ]
+  end
+
+  def self.auth_menu_registry
+    @auth_menu_registry ||= [ 'layouts/menu_auth' ]
+  end
+
+  def self.footer_menu_registry
+    @footer_menu_registry ||= [ 'layouts/menu_footer' ]
+  end
 
   def self.key_gem_patterns
     @key_gem_patterns ||= [ 'rails', /^barkest/ ]

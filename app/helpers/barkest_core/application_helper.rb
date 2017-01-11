@@ -87,6 +87,24 @@ module BarkestCore
       "<div class=\"alert alert-#{type} alert-dismissible\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>#{render_alert_message(message)}</div>".html_safe
     end
 
+    ##
+    # <%= render_for_namespace 'layout_partial_name' %>
+    #
+    # Only renders if the current controller is namespaced.
+    # If the specified partial doesn't exist, no error is raised.
+    def render_for_namespace view
+      nmspc = params[:controller].include?('/') ? params[:controller].rpartition('/')[0] : nil
+      # recurse down the namespace tree to see if we get any hits.
+      until nmspc.blank?
+        template = "layouts/#{nmspc}/_#{view}"
+        partial = "layouts/#{nmspc}/#{view}"
+        if lookup_context.template_exists?(template)
+          return render(partial)
+        end
+        nmspc = nmspc.include?('/') ? nmspc.rpartition('/')[0] : nil
+      end
+    end
+
     private
 
     def render_alert_message(message, bottom = true)
