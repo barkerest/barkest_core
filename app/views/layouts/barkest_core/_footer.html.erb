@@ -5,7 +5,11 @@
       <ul>
         <%= render_for_namespace 'menu_footer' %>
         <% BarkestCore.send(:footer_menu_registry).reverse.each do |partial| %>
-            <%= render partial rescue nil %>
+            <% if File.exist?(partial) %>
+                <%= render file: partial rescue nil %>
+            <% else %>
+                <%= render partial rescue nil %>
+            <% end %>
         <% end %>
       </ul>
     </nav>

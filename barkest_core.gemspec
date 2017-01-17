@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.files = `git ls-files -z`.split("\x0")
   s.files.delete 'barkest_core.gemspec'
 
-  s.add_dependency 'rails',                           '~> 4.2.5.1'
+  s.add_dependency 'rails',                           '~> 4.2.7.1'
   s.add_dependency 'sass-rails',                      '~> 5.0.4'
   s.add_dependency 'uglifier',                        '~> 3.0.0'
   s.add_dependency 'coffee-rails',                    '~> 4.1.1'
@@ -44,6 +44,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'spawnling',                       '~> 2.1.6'
   s.add_dependency 'ruby-ntlm',                       '0.0.3'
   s.add_dependency 'exception_notification',          '~> 4.1.4'
+  s.add_dependency 'tiny_tds',                        '~> 1.0.4'
+  s.add_dependency 'activerecord-sqlserver-adapter',  '~> 4.2.1'
 
 
   s.add_development_dependency 'sqlite3'

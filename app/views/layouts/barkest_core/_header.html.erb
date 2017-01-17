@@ -13,12 +13,20 @@
         <ul class="nav navbar-nav navbar-right">
           <li><%= link_to 'Home', root_path %></li>
           <% BarkestCore.send(:anon_menu_registry).each do |partial| %>
-              <%= render partial rescue nil %>
+              <% if File.exist?(partial) %>
+                  <%= render file: partial rescue nil %>
+              <% else %>
+                  <%= render partial rescue nil %>
+              <% end %>
           <% end %>
           <%= render_for_namespace 'menu_anon' %>
           <% if logged_in? %>
               <% BarkestCore.send(:auth_menu_registry).each do |partial| %>
-                  <%= render partial rescue nil %>
+                  <% if File.exist?(partial) %>
+                      <%= render file: partial rescue nil %>
+                  <% else %>
+                      <%= render partial rescue nil %>
+                  <% end %>
               <% end %>
               <%= render_for_namespace 'menu_auth' %>
           <% end %>
