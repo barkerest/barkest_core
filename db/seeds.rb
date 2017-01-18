@@ -14,7 +14,9 @@
 class Seeds
   # :nodoc:
   def self.process
-    Dir.glob(File.expand_path('../seeds/*.rb', __FILE__)).sort do |a,b|
+    list = []
+    BarkestCore.send(:db_seed_path_registry) { |path| list += Dir.glob(path) }
+    list.sort do |a,b|
       a = File.basename(a)
       b = File.basename(b)
       a_core = (a.index('barkest_core') == 0)

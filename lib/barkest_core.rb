@@ -252,6 +252,14 @@ module BarkestCore
     end
   end
 
+  ##
+  # Registers a path to be processed by the custom seeds.rb file.
+  def self.register_db_seed_path(seed_path)
+    unless seed_path.blank?
+      db_seed_path_registry << partial_path unless db_seed_path_registry.include?(seed_path)
+    end
+  end
+
   private
 
   def self.anon_menu_registry
@@ -264,6 +272,10 @@ module BarkestCore
 
   def self.footer_menu_registry
     @footer_menu_registry ||= [ 'layouts/menu_footer' ]
+  end
+
+  def self.db_seed_path_registry
+    @db_seed_path_registry ||= [ 'db/seeds/*.rb' ]
   end
 
   def self.key_gem_patterns
