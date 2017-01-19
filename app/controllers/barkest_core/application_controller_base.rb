@@ -4,8 +4,6 @@ module BarkestCore
   # The application's ApplicationController should inherit from this.
   class ApplicationControllerBase < ActionController::Base
 
-
-
     include BarkestCore::SessionsHelper
     include BarkestCore::RecaptchaHelper
     include BarkestCore::StatusHelper

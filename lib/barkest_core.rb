@@ -260,6 +260,12 @@ module BarkestCore
     end
   end
 
+  ##
+  # Gets the root path of the BarkestCore gem.
+  def self.gem_root_path
+    @gem_root_path ||= File.expand_path('../..', __FILE__)
+  end
+
   private
 
   def self.anon_menu_registry

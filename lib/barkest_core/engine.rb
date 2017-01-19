@@ -96,6 +96,7 @@ barkest_core/ArchivoNarrow-Regular.ttf  )
       Date::DATE_FORMATS[:date] = '%m/%d/%y'
       Date::DATE_FORMATS[:date4] = '%m/%d/%Y'
 
+      # If a child gem extends this class, we still want to load the original.
       require_relative '../../app/controllers/barkest_core/application_controller_base'
 
     end
