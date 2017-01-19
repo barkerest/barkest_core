@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    barkest_core (1.5.1.0)
+    barkest_core (1.5.2.0)
       activerecord-sqlserver-adapter (~> 4.2.1)
       axlsx (~> 2.0.1)
       axlsx_rails (>= 0.4.0)
