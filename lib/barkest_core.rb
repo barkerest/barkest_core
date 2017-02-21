@@ -261,6 +261,22 @@ module BarkestCore
   end
 
   ##
+  # Registers a CSS file to include in the application template.
+  def self.registry_css_file(css_path)
+    unless css_path.blank?
+      css_registry << css_path unless css_registry.include?(css_path)
+    end
+  end
+
+  ##
+  # Registers a JS file to include in the application template.
+  def self.registry_js_file(js_path)
+    unless js_path.blank?
+      js_registry << js_path unless js_registry.include?(js_path)
+    end
+  end
+
+  ##
   # Gets the root path of the BarkestCore gem.
   def self.gem_root_path
     @gem_root_path ||= File.expand_path('../..', __FILE__)
@@ -274,6 +290,14 @@ module BarkestCore
 
   def self.auth_menu_registry
     @auth_menu_registry ||= [ 'layouts/menu_auth' ]
+  end
+
+  def self.css_registry
+    @css_registry ||= [ ]
+  end
+
+  def self.js_registry
+    @js_registry ||= [ ]
   end
 
   def self.footer_menu_registry
